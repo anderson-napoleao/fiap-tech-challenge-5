@@ -3,6 +3,9 @@ server:
 
 identity:
   base-url: http://localhost:8081
+  admin:
+    username: admin
+    password: admin
 
 spring:
   datasource:
