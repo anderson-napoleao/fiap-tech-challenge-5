@@ -1,6 +1,19 @@
 server:
   port: 8081
 
+spring:
+  application:
+    name: servico-identidade
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  tracing:
+    sampling:
+      probability: 1.0
+
 security:
   jwt:
     secret: condominio-jwt-secret-local-2026-seguro
