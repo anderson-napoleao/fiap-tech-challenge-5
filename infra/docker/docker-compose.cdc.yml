@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: debezium/postgres:16
+    container_name: condominio-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: condominio
+    networks:
+      - cdc-net
+
+  zookeeper:
+    image: quay.io/debezium/zookeeper:2.7
+    container_name: condominio-zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - cdc-net
+
+  kafka:
+    image: quay.io/debezium/kafka:2.7
+    container_name: condominio-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+    networks:
+      - cdc-net
+
+  connect:
+    image: quay.io/debezium/connect:2.7
+    container_name: condominio-connect
+    ports:
+      - "8084:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+    depends_on:
+      - kafka
+      - postgres
+    networks:
+      - cdc-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: condominio-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - cdc-net
+
+networks:
+  cdc-net:
+    driver: bridge

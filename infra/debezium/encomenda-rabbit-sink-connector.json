@@ -1,0 +1,16 @@
+{
+  "name": "encomenda-rabbit-sink-connector",
+  "config": {
+    "connector.class": "com.github.jcustenborder.kafka.connect.rabbitmq.RabbitMQSinkConnector",
+    "tasks.max": "1",
+    "topics": "encomenda.recebida",
+    "rabbitmq.username": "guest",
+    "rabbitmq.password": "guest",
+    "rabbitmq.host": "rabbitmq",
+    "rabbitmq.port": "5672",
+    "rabbitmq.virtual.host": "/",
+    "rabbitmq.exchange": "encomenda.events",
+    "rabbitmq.routing.key": "encomenda.recebida",
+    "rabbitmq.queue": "encomenda.recebida.queue"
+  }
+}
