@@ -138,6 +138,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-encomenda`
 - Entrega: checklist de ativacao para quando o modulo virar Spring Boot.
+- Status: concluido em 2026-02-21
+- Evidencia: `docs/observabilidade-blueprint-servico-encomenda.md`
 - Criterios de aceite:
   - blueprint descreve dependencias e arquivos a criar;
   - regras de arquitetura permanecem inalteradas;
@@ -147,6 +149,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-notificacao`
 - Entrega: checklist de ativacao para quando o modulo virar Spring Boot.
+- Status: concluido em 2026-02-21
+- Evidencia: `docs/observabilidade-blueprint-servico-notificacao.md`
 - Criterios de aceite:
   - blueprint descreve dependencias e arquivos a criar;
   - regras de arquitetura permanecem inalteradas;
@@ -158,6 +162,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-identidade`, `servico-usuario`
 - Entrega: testes que validam formato/campos obrigatorios de logs.
+- Status: concluido em 2026-02-21
+- Evidencia: `servico-identidade/src/test/java/br/com/condominio/identidade/infrastructure/observability/LogJsonContractTest.java`, `servico-usuario/src/test/java/br/com/condominio/servico/usuario/infrastructure/observability/LogJsonContractTest.java`
 - Criterios de aceite:
   - teste falha quando campo obrigatorio de log nao existe;
   - teste valida que logs sao JSON parseavel;
@@ -167,6 +173,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-identidade`, `servico-usuario`
 - Entrega: cenario de teste com correlacao ponta a ponta.
+- Status: concluido em 2026-02-21
+- Evidencia: `docs/observabilidade-operacao.md`
 - Criterios de aceite:
   - fluxo de cadastro de usuario prova correlacao entre os dois servicos;
   - `traceId` aparece em ambos os lados da chamada;
@@ -176,6 +184,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: raiz
 - Entrega: passos para subir local e validar observabilidade.
+- Status: concluido em 2026-02-21
+- Evidencia: `docs/observabilidade-operacao.md`
 - Criterios de aceite:
   - comandos de subida local documentados;
   - passos de verificacao de logs e trace documentados;
