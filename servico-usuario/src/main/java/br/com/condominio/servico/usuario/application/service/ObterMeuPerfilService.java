@@ -14,13 +14,13 @@ public class ObterMeuPerfilService implements ObterMeuPerfilUseCase {
   }
 
   @Override
-  public Result executar(String identityId) {
-    if (identityId == null || identityId.isBlank()) {
-      throw new IllegalArgumentException("IdentityId obrigatorio");
+  public Result executar(Command command) {
+    if (command == null) {
+      throw new IllegalArgumentException("Comando obrigatorio");
     }
 
     Usuario usuario = usuarioRepositoryPort
-        .buscarPorIdentityId(identityId)
+        .buscarPorIdentityId(command.identityId())
         .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
 
     return new Result(

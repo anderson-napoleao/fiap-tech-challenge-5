@@ -101,7 +101,7 @@ class UserControllerTest {
 
   @Test
   void deveRetornarPerfilNoMeComToken() throws Exception {
-    when(obterMeuPerfilUseCase.executar("id-123"))
+    when(obterMeuPerfilUseCase.executar(any()))
         .thenReturn(new ObterMeuPerfilUseCase.Result(
             1L,
             "id-123",
@@ -122,7 +122,7 @@ class UserControllerTest {
 
   @Test
   void deveRetornar404QuandoNaoEncontrarPerfil() throws Exception {
-    when(obterMeuPerfilUseCase.executar("id-404")).thenThrow(new NotFoundException("Usuario nao encontrado"));
+    when(obterMeuPerfilUseCase.executar(any())).thenThrow(new NotFoundException("Usuario nao encontrado"));
 
     mockMvc
         .perform(get("/users/me").with(jwt().jwt(jwt -> jwt.subject("id-404"))))
@@ -153,7 +153,7 @@ class UserControllerTest {
 
   @Test
   void deveAtualizarMeuPerfilComToken() throws Exception {
-    when(atualizarMeuPerfilUseCase.executar(any(), any()))
+    when(atualizarMeuPerfilUseCase.executar(any()))
         .thenReturn(new AtualizarMeuPerfilUseCase.Result(
             1L,
             "id-123",

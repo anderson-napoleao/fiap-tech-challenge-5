@@ -25,6 +25,7 @@ public class RegisteredClientConfig {
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .redirectUri("http://localhost:8080/login/oauth2/code/web")
+            .redirectUri("http://localhost:8081/login/oauth2/code/web")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .clientSettings(ClientSettings.builder().requireProofKey(true).build())

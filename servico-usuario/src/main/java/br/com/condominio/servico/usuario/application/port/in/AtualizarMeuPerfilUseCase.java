@@ -5,6 +5,7 @@ import br.com.condominio.servico.usuario.domain.TipoUsuario;
 public interface AtualizarMeuPerfilUseCase {
 
   record Command(
+      String identityId,
       String nomeCompleto,
       String telefone,
       String cpf,
@@ -12,8 +13,20 @@ public interface AtualizarMeuPerfilUseCase {
       String bloco
   ) {
     public Command {
-      // Para atualização, os campos são opcionais, mas se fornecidos devem ser válidos
-      // Validação específica por tipo será feita no service junto com o usuário existente
+      if (identityId == null || identityId.isBlank()) {
+        throw new IllegalArgumentException("IdentityId obrigatorio");
+      }
+      validarOpcionalNaoVazio(nomeCompleto, "Nome completo");
+      validarOpcionalNaoVazio(telefone, "Telefone");
+      validarOpcionalNaoVazio(cpf, "Cpf");
+      validarOpcionalNaoVazio(apartamento, "Apartamento");
+      validarOpcionalNaoVazio(bloco, "Bloco");
+    }
+
+    private static void validarOpcionalNaoVazio(String valor, String campo) {
+      if (valor != null && valor.isBlank()) {
+        throw new IllegalArgumentException(campo + " invalido");
+      }
     }
   }
 
@@ -30,5 +43,5 @@ public interface AtualizarMeuPerfilUseCase {
   ) {
   }
 
-  Result executar(String identityId, Command command);
+  Result executar(Command command);
 }

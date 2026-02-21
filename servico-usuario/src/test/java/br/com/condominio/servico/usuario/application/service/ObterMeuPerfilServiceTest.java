@@ -41,7 +41,7 @@ class ObterMeuPerfilServiceTest {
             .build()
     ));
 
-    ObterMeuPerfilUseCase.Result result = service.executar("id-123");
+    ObterMeuPerfilUseCase.Result result = service.executar(new ObterMeuPerfilUseCase.Command("id-123"));
 
     assertEquals("id-123", result.identityId());
     assertEquals("maria@teste.com", result.email());
@@ -51,6 +51,9 @@ class ObterMeuPerfilServiceTest {
   void deveLancarNotFoundQuandoNaoExistePerfil() {
     when(usuarioRepositoryPort.buscarPorIdentityId("id-404")).thenReturn(Optional.empty());
 
-    assertThrows(NotFoundException.class, () -> service.executar("id-404"));
+    assertThrows(
+        NotFoundException.class,
+        () -> service.executar(new ObterMeuPerfilUseCase.Command("id-404"))
+    );
   }
 }

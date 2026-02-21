@@ -44,8 +44,7 @@ class AtualizarMeuPerfilServiceTest {
     when(usuarioRepositoryPort.salvar(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
     AtualizarMeuPerfilUseCase.Result result = service.executar(
-        "id-123",
-        new AtualizarMeuPerfilUseCase.Command("Maria Silva", "222", "999", "102", "B")
+        new AtualizarMeuPerfilUseCase.Command("id-123", "Maria Silva", "222", "999", "102", "B")
     );
 
     assertEquals("Maria Silva", result.nomeCompleto());
@@ -59,7 +58,7 @@ class AtualizarMeuPerfilServiceTest {
 
     assertThrows(
         NotFoundException.class,
-        () -> service.executar("id-404", new AtualizarMeuPerfilUseCase.Command(null, null, null, "101", "A"))
+        () -> service.executar(new AtualizarMeuPerfilUseCase.Command("id-404", null, null, null, "101", "A"))
     );
   }
 }

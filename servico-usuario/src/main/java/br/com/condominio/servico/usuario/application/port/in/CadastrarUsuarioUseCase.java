@@ -15,12 +15,14 @@ public interface CadastrarUsuarioUseCase {
       String bloco
   ) {
     public Command {
-      // Validações estruturais apenas - sem regras de negócio
       if (nomeCompleto == null || nomeCompleto.isBlank()) {
         throw new IllegalArgumentException("Nome completo obrigatorio");
       }
       if (email == null || email.isBlank()) {
         throw new IllegalArgumentException("Email obrigatorio");
+      }
+      if (!email.contains("@")) {
+        throw new IllegalArgumentException("Email invalido");
       }
       if (senha == null || senha.isBlank()) {
         throw new IllegalArgumentException("Senha obrigatoria");
@@ -28,7 +30,16 @@ public interface CadastrarUsuarioUseCase {
       if (tipo == null) {
         throw new IllegalArgumentException("Tipo obrigatorio");
       }
-      // Regras de negócio ficam na entidade Usuario (Domínio Rico)
+      validarOpcionalNaoVazio(telefone, "Telefone");
+      validarOpcionalNaoVazio(cpf, "Cpf");
+      validarOpcionalNaoVazio(apartamento, "Apartamento");
+      validarOpcionalNaoVazio(bloco, "Bloco");
+    }
+
+    private static void validarOpcionalNaoVazio(String valor, String campo) {
+      if (valor != null && valor.isBlank()) {
+        throw new IllegalArgumentException(campo + " invalido");
+      }
     }
   }
 

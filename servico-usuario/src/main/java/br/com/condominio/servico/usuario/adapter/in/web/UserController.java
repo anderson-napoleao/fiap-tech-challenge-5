@@ -56,7 +56,9 @@ public class UserController {
 
   @GetMapping("/me")
   public UsuarioResponse buscarMeuPerfil(@AuthenticationPrincipal Jwt jwt) {
-    ObterMeuPerfilUseCase.Result result = obterMeuPerfilUseCase.executar(jwt.getSubject());
+    ObterMeuPerfilUseCase.Result result = obterMeuPerfilUseCase.executar(
+        new ObterMeuPerfilUseCase.Command(jwt.getSubject())
+    );
     return toResponse(result);
   }
 
@@ -66,8 +68,8 @@ public class UserController {
       @RequestBody AtualizarUsuarioRequest request
   ) {
     AtualizarMeuPerfilUseCase.Result result = atualizarMeuPerfilUseCase.executar(
-        jwt.getSubject(),
         new AtualizarMeuPerfilUseCase.Command(
+            jwt.getSubject(),
             request.nomeCompleto(),
             request.telefone(),
             request.cpf(),

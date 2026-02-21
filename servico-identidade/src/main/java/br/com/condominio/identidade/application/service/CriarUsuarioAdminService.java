@@ -2,8 +2,6 @@ package br.com.condominio.identidade.application.service;
 
 import br.com.condominio.identidade.application.port.in.CriarUsuarioAdminUseCase;
 import br.com.condominio.identidade.application.port.out.UsuarioStorePort;
-import java.util.List;
-import java.util.Set;
 
 public class CriarUsuarioAdminService implements CriarUsuarioAdminUseCase {
 
@@ -14,21 +12,17 @@ public class CriarUsuarioAdminService implements CriarUsuarioAdminUseCase {
   }
 
   @Override
-  public UsuarioResponse criar(String username, String password, List<String> roles) {
-    if (username == null || username.isBlank()) {
-      throw new IllegalArgumentException("username nao pode ser vazio");
+  public UsuarioResponse criar(Command command) {
+    if (command == null) {
+      throw new IllegalArgumentException("comando nao pode ser nulo");
     }
-    if (password == null || password.isBlank()) {
-      throw new IllegalArgumentException("password nao pode ser vazio");
-    }
-    if (roles == null || roles.isEmpty()) {
-      throw new IllegalArgumentException("roles nao pode ser vazio");
-    }
-    if (usuarioStorePort.existsByUsername(username)) {
+    if (usuarioStorePort.existsByEmail(command.email())) {
       throw new IllegalArgumentException("usuario ja existe");
     }
 
-    usuarioStorePort.save(username, password, Set.copyOf(roles));
-    return new UsuarioResponse(username, List.copyOf(roles));
+    UsuarioStorePort.IdentityUserData criado =
+        usuarioStorePort.create(command.email(), command.password(), command.role());
+
+    return new UsuarioResponse(criado.id(), criado.email(), command.role());
   }
 }

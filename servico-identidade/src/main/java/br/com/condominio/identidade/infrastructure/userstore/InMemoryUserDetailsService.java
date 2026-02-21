@@ -28,6 +28,7 @@ public class InMemoryUserDetailsService implements UserDetailsService {
         .password(usuario.passwordEncoded())
         .authorities(
             usuario.roles().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet()))
+        .disabled(!usuario.enabled())
         .build();
   }
 }

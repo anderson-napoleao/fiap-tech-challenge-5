@@ -4,6 +4,14 @@ import br.com.condominio.servico.usuario.domain.TipoUsuario;
 
 public interface ObterMeuPerfilUseCase {
 
+  record Command(String identityId) {
+    public Command {
+      if (identityId == null || identityId.isBlank()) {
+        throw new IllegalArgumentException("IdentityId obrigatorio");
+      }
+    }
+  }
+
   record Result(
       Long id,
       String identityId,
@@ -17,5 +25,5 @@ public interface ObterMeuPerfilUseCase {
   ) {
   }
 
-  Result executar(String identityId);
+  Result executar(Command command);
 }

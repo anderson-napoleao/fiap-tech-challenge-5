@@ -15,17 +15,13 @@ public class AtualizarMeuPerfilService implements AtualizarMeuPerfilUseCase {
   }
 
   @Override
-  public Result executar(String identityId, Command command) {
-    if (identityId == null || identityId.isBlank()) {
-      throw new IllegalArgumentException("IdentityId obrigatorio");
-    }
-
+  public Result executar(Command command) {
     if (command == null) {
       throw new IllegalArgumentException("Comando obrigatorio");
     }
 
     Usuario existente = usuarioRepositoryPort
-        .buscarPorIdentityId(identityId)
+        .buscarPorIdentityId(command.identityId())
         .orElseThrow(() -> new NotFoundException("Usuario nao encontrado"));
 
     // A entidade Usuario fará a validação de consistência no construtor

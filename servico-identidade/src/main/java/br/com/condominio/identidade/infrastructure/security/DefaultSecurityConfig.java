@@ -20,13 +20,18 @@ public class DefaultSecurityConfig {
   @Order(2)
   public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
     http
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/admin/users/**"))
         .authorizeHttpRequests(
             auth ->
                 auth
                     .requestMatchers("/actuator/health")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/admin/users")
-                    .hasRole("ADMIN")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.DELETE, "/admin/users/*")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.PATCH, "/admin/users/*/disable")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .httpBasic(Customizer.withDefaults())
