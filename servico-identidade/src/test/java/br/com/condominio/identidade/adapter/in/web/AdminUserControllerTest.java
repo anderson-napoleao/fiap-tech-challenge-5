@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,10 +22,17 @@ class AdminUserControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
+  private static String basicAuth(String username, String password) {
+    String credentials = username + ":" + password;
+    String encoded = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+    return "Basic " + encoded;
+  }
+
   @Test
   void deveCriarUsuarioComContratoEsperadoPeloGateway() throws Exception {
     mockMvc
         .perform(post("/admin/users")
+            .header("Authorization", basicAuth("admin", "admin"))
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -40,11 +49,13 @@ class AdminUserControllerTest {
   @Test
   void deveRemoverEDesabilitarSemFalharQuandoIdNaoExiste() throws Exception {
     mockMvc
-        .perform(delete("/admin/users/id-inexistente"))
+        .perform(delete("/admin/users/id-inexistente")
+            .header("Authorization", basicAuth("admin", "admin")))
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(patch("/admin/users/id-inexistente/disable"))
+        .perform(patch("/admin/users/id-inexistente/disable")
+            .header("Authorization", basicAuth("admin", "admin")))
         .andExpect(status().isNoContent());
   }
 }
