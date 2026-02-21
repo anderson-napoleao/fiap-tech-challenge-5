@@ -28,7 +28,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(UserController.class)
 @Import({SecurityConfig.class, GlobalExceptionHandler.class})
-@TestPropertySource(properties = "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8081/oauth2/jwks")
+@TestPropertySource(properties = {
+    "security.jwt.secret=condominio-jwt-secret-local-2026-seguro",
+    "security.jwt.issuer=servico-identidade"
+})
 class UserControllerTest {
 
   @Autowired

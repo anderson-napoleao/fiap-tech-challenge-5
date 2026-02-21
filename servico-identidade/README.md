@@ -1,6 +1,6 @@
 # servico-identidade
 
-Authorization Server OAuth2/OIDC com Spring Authorization Server, emissão JWT (RS256), discovery OIDC e JWKS.
+Servico de identidade com JWT simples (HS256) para ambiente local.
 
 ## Requisitos
 
@@ -9,7 +9,7 @@ Authorization Server OAuth2/OIDC com Spring Authorization Server, emissão JWT (
 
 ## Como subir
 
-No diretório raiz do repositório:
+No diretorio raiz do repositorio:
 
 ```bash
 mvn -pl servico-identidade spring-boot:run
@@ -17,61 +17,41 @@ mvn -pl servico-identidade spring-boot:run
 
 ## Endpoints principais
 
-- Discovery OIDC: `GET /.well-known/openid-configuration`
-- JWKS: `GET /oauth2/jwks`
 - Health: `GET /actuator/health`
+- Criar usuario: `POST /admin/users`
+- Remover usuario: `DELETE /admin/users/{id}`
+- Desabilitar usuario: `PATCH /admin/users/{id}/disable`
+- Gerar token: `POST /auth/token`
 
-## Criar usuário em runtime (`/admin/users`)
-
-Endpoint protegido com **Basic Auth**.
-
-Credenciais admin padrão (dev):
-- usuário: `admin`
-- senha: `admin`
-
-Exemplo:
+## Criar usuario
 
 ```bash
-curl -i -X POST "http://localhost:8080/admin/users" \
-  -u admin:admin \
+curl -i -X POST "http://localhost:8081/admin/users" \
   -H "Content-Type: application/json" \
   -d '{
-    "username":"maria",
+    "email":"maria@teste.com",
     "password":"123456",
-    "roles":["MORADOR","PORTEIRO"]
+    "role":"USER"
   }'
 ```
 
-As roles recebidas viram authorities `ROLE_...` internamente.
-
-## Testar login humano no browser (Authorization Code + PKCE)
-
-Client registrado em memória:
-- `client_id`: `web`
-- `client_secret`: `web-secret`
-- grant types: `authorization_code`, `refresh_token`
-- redirect URI: `http://localhost:8080/login/oauth2/code/web`
-- scopes: `openid`, `profile`
-- PKCE: habilitado (`requireProofKey=true`)
-
-Abra no browser:
-
-```text
-http://localhost:8080/oauth2/authorize?response_type=code&client_id=web&scope=openid%20profile&redirect_uri=http://localhost:8080/login/oauth2/code/web&code_challenge=abcdefghijklmnopqrstuvwxyzABCDEFGH&code_challenge_method=S256
-```
-
-Faça login com um usuário existente em memória (ex.: criado via `/admin/users`) e autorize.
-
-## Trocar authorization code por token
+## Gerar token JWT
 
 ```bash
-curl -i -X POST "http://localhost:8080/oauth2/token" \
-  -u web:web-secret \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=authorization_code" \
-  -d "code=<AUTHORIZATION_CODE>" \
-  -d "redirect_uri=http://localhost:8080/login/oauth2/code/web" \
-  -d "code_verifier=<CODE_VERIFIER_USADO_NO_PKCE>"
+curl -i -X POST "http://localhost:8081/auth/token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username":"maria@teste.com",
+    "password":"123456"
+  }'
 ```
 
-O access token retornado é JWT assinado com chave RSA em memória (RS256).
+Resposta:
+
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```

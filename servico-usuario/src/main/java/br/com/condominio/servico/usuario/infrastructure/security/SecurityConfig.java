@@ -1,5 +1,8 @@
 package br.com.condominio.servico.usuario.infrastructure.security;
 
+import java.nio.charset.StandardCharsets;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,7 +11,12 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -30,8 +38,18 @@ public class SecurityConfig {
 
   @Bean
   public JwtDecoder jwtDecoder(
-      @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}") String jwkSetUri
+      @Value("${security.jwt.secret}") String jwtSecret,
+      @Value("${security.jwt.issuer:servico-identidade}") String issuer
   ) {
-    return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+    SecretKey secretKey = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey)
+        .macAlgorithm(MacAlgorithm.HS256)
+        .build();
+
+    OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
+        JwtValidators.createDefaultWithIssuer(issuer)
+    );
+    decoder.setJwtValidator(validator);
+    return decoder;
   }
 }

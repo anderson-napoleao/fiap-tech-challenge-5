@@ -1,2 +1,8 @@
 server:
   port: 8081
+
+security:
+  jwt:
+    secret: condominio-jwt-secret-local-2026-seguro
+    issuer: servico-identidade
+    expires-seconds: 3600

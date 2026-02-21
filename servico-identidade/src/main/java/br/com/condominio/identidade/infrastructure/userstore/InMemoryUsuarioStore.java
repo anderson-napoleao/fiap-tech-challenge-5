@@ -51,6 +51,24 @@ public class InMemoryUsuarioStore implements UsuarioStorePort {
   }
 
   @Override
+  public Optional<IdentityUserData> findByUsername(String username) {
+    return findByUsernameInternal(username)
+        .map(usuario -> new IdentityUserData(
+            usuario.id(),
+            usuario.username(),
+            usuario.enabled(),
+            usuario.roles()
+        ));
+  }
+
+  @Override
+  public boolean matchesPassword(String username, String rawPassword) {
+    return findByUsernameInternal(username)
+        .map(usuario -> passwordEncoder.matches(rawPassword, usuario.passwordEncoded()))
+        .orElse(false);
+  }
+
+  @Override
   public void removeById(String identityId) {
     String username = usernamePorId.remove(identityId);
     if (username == null) {
@@ -78,7 +96,11 @@ public class InMemoryUsuarioStore implements UsuarioStorePort {
     );
   }
 
-  public Optional<UsuarioData> findByUsername(String username) {
+  public Optional<UsuarioData> findUsuarioByUsername(String username) {
+    return findByUsernameInternal(username);
+  }
+
+  private Optional<UsuarioData> findByUsernameInternal(String username) {
     return Optional.ofNullable(usuariosPorUsername.get(username));
   }
 

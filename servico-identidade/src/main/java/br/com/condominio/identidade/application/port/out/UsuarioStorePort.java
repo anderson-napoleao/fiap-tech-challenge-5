@@ -1,5 +1,6 @@
 package br.com.condominio.identidade.application.port.out;
 
+import java.util.Optional;
 import java.util.Set;
 
 public interface UsuarioStorePort {
@@ -16,6 +17,10 @@ public interface UsuarioStorePort {
   }
 
   IdentityUserData create(String email, String rawPassword, String role);
+
+  Optional<IdentityUserData> findByUsername(String username);
+
+  boolean matchesPassword(String username, String rawPassword);
 
   void removeById(String identityId);
 

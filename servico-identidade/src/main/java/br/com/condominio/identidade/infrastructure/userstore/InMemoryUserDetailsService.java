@@ -21,7 +21,7 @@ public class InMemoryUserDetailsService implements UserDetailsService {
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     InMemoryUsuarioStore.UsuarioData usuario =
         usuarioStore
-            .findByUsername(username)
+            .findUsuarioByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("usuario nao encontrado: " + username));
 
     return User.withUsername(usuario.username())

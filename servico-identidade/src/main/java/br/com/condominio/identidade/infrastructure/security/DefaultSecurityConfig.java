@@ -5,7 +5,6 @@ import java.util.Set;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,14 +16,15 @@ import org.springframework.security.web.SecurityFilterChain;
 public class DefaultSecurityConfig {
 
   @Bean
-  @Order(2)
   public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.ignoringRequestMatchers("/admin/users/**"))
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/admin/users/**", "/auth/token"))
         .authorizeHttpRequests(
             auth ->
                 auth
                     .requestMatchers("/actuator/health")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/auth/token")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/admin/users")
                     .permitAll()
@@ -34,8 +34,7 @@ public class DefaultSecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-        .httpBasic(Customizer.withDefaults())
-        .formLogin(Customizer.withDefaults());
+        .httpBasic(Customizer.withDefaults());
 
     return http.build();
   }

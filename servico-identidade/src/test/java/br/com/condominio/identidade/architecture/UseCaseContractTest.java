@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import br.com.condominio.identidade.application.port.in.CriarUsuarioAdminUseCase;
 import br.com.condominio.identidade.application.port.in.DesabilitarUsuarioAdminUseCase;
+import br.com.condominio.identidade.application.port.in.GerarTokenUseCase;
 import br.com.condominio.identidade.application.port.in.RemoverUsuarioAdminUseCase;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ class UseCaseContractTest {
     validarMetodoDeEntrada(CriarUsuarioAdminUseCase.class);
     validarMetodoDeEntrada(RemoverUsuarioAdminUseCase.class);
     validarMetodoDeEntrada(DesabilitarUsuarioAdminUseCase.class);
+    validarMetodoDeEntrada(GerarTokenUseCase.class);
   }
 
   private void validarMetodoDeEntrada(Class<?> useCaseInterface) {

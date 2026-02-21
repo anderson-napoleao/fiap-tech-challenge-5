@@ -1,0 +1,359 @@
+{
+  "info": {
+    "_postman_id": "1a2efcc0-b399-4d5f-a696-f3588f665891",
+    "name": "Servico Usuario - Local (JWT Simples)",
+    "description": "Fluxo local simplificado com JWT:\n1) POST /users\n2) GET /users/me\n\nOs endpoints protegidos geram token automaticamente via /auth/token no pre-request script.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "usuario_base_url",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "identidade_base_url",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "usuario_email",
+      "value": "maria.teste+{{$timestamp}}@email.com",
+      "type": "string"
+    },
+    {
+      "key": "usuario_senha",
+      "value": "123456",
+      "type": "string"
+    },
+    {
+      "key": "usuario_identity_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Criar usuario (POST /users)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nomeCompleto\": \"Maria da Silva\",\n  \"email\": \"{{usuario_email}}\",\n  \"senha\": \"{{usuario_senha}}\",\n  \"tipo\": \"MORADOR\",\n  \"telefone\": \"11999999999\",\n  \"cpf\": \"12345678901\",\n  \"apartamento\": \"101\",\n  \"bloco\": \"A\"\n}"
+        },
+        "url": {
+          "raw": "{{usuario_base_url}}/users",
+          "host": [
+            "{{usuario_base_url}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "var json = pm.response.json();",
+              "var senhaUsada = pm.variables.replaceIn('{{usuario_senha}}');",
+              "",
+              "if (json && json.identityId) {",
+              "  pm.collectionVariables.set('usuario_identity_id', json.identityId);",
+              "  pm.environment.set('usuario_identity_id', json.identityId);",
+              "}",
+              "if (json && json.email) {",
+              "  pm.collectionVariables.set('usuario_email', json.email);",
+              "  pm.environment.set('usuario_email', json.email);",
+              "}",
+              "if (senhaUsada) {",
+              "  pm.collectionVariables.set('usuario_senha', senhaUsada);",
+              "  pm.environment.set('usuario_senha', senhaUsada);",
+              "}",
+              "",
+              "pm.collectionVariables.unset('access_token');",
+              "pm.environment.unset('access_token');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Meu perfil (GET /users/me)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{usuario_base_url}}/users/me",
+          "host": [
+            "{{usuario_base_url}}"
+          ],
+          "path": [
+            "users",
+            "me"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const MIN_VALIDITY_SECONDS = 30;",
+              "",
+              "function getVar(key) {",
+              "  const raw = pm.environment.get(key) || pm.collectionVariables.get(key) || '';",
+              "  return pm.variables.replaceIn(String(raw));",
+              "}",
+              "",
+              "function setVar(key, value) {",
+              "  pm.collectionVariables.set(key, value);",
+              "  pm.environment.set(key, value);",
+              "}",
+              "",
+              "function decodeJwt(token) {",
+              "  try {",
+              "    const partRaw = token.split('.')[1];",
+              "    if (!partRaw) return null;",
+              "    let part = partRaw.replace(/-/g, '+').replace(/_/g, '/');",
+              "    while (part.length % 4) part += '=';",
+              "    return JSON.parse(atob(part));",
+              "  } catch (e) {",
+              "    return null;",
+              "  }",
+              "}",
+              "",
+              "function tokenValido(token) {",
+              "  if (!token) return false;",
+              "  const payload = decodeJwt(token);",
+              "  if (!payload || !payload.exp) return false;",
+              "  const now = Math.floor(Date.now() / 1000);",
+              "  return (payload.exp - now) > MIN_VALIDITY_SECONDS;",
+              "}",
+              "",
+              "const tokenAtual = getVar('access_token');",
+              "if (tokenValido(tokenAtual)) {",
+              "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + tokenAtual });",
+              "  return;",
+              "}",
+              "",
+              "const baseUrl = getVar('identidade_base_url');",
+              "const username = getVar('usuario_email');",
+              "const password = getVar('usuario_senha');",
+              "",
+              "if (!baseUrl || !username || !password) {",
+              "  throw new Error('Variaveis obrigatorias ausentes para gerar token automatico');",
+              "}",
+              "",
+              "pm.sendRequest({",
+              "  url: baseUrl + '/auth/token',",
+              "  method: 'POST',",
+              "  header: { 'Content-Type': 'application/json' },",
+              "  body: {",
+              "    mode: 'raw',",
+              "    raw: JSON.stringify({ username: username, password: password })",
+              "  }",
+              "}, function (err, res) {",
+              "  if (err || !res) {",
+              "    throw new Error('Falha no /auth/token: ' + (err ? err.message : 'sem resposta'));",
+              "  }",
+              "  if (res.code !== 200) {",
+              "    throw new Error('/auth/token retornou status ' + res.code + ' body=' + res.text());",
+              "  }",
+              "",
+              "  const json = res.json();",
+              "  if (!json.access_token) {",
+              "    throw new Error('Resposta sem access_token');",
+              "  }",
+              "",
+              "  setVar('access_token', json.access_token);",
+              "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + json.access_token });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Atualizar meu perfil (PUT /users/me)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nomeCompleto\": \"Maria da Silva Atualizada\",\n  \"telefone\": \"11988887777\",\n  \"cpf\": \"12345678901\",\n  \"apartamento\": \"102\",\n  \"bloco\": \"B\"\n}"
+        },
+        "url": {
+          "raw": "{{usuario_base_url}}/users/me",
+          "host": [
+            "{{usuario_base_url}}"
+          ],
+          "path": [
+            "users",
+            "me"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const MIN_VALIDITY_SECONDS = 30;",
+              "",
+              "function getVar(key) {",
+              "  const raw = pm.environment.get(key) || pm.collectionVariables.get(key) || '';",
+              "  return pm.variables.replaceIn(String(raw));",
+              "}",
+              "",
+              "function setVar(key, value) {",
+              "  pm.collectionVariables.set(key, value);",
+              "  pm.environment.set(key, value);",
+              "}",
+              "",
+              "function decodeJwt(token) {",
+              "  try {",
+              "    const partRaw = token.split('.')[1];",
+              "    if (!partRaw) return null;",
+              "    let part = partRaw.replace(/-/g, '+').replace(/_/g, '/');",
+              "    while (part.length % 4) part += '=';",
+              "    return JSON.parse(atob(part));",
+              "  } catch (e) {",
+              "    return null;",
+              "  }",
+              "}",
+              "",
+              "function tokenValido(token) {",
+              "  if (!token) return false;",
+              "  const payload = decodeJwt(token);",
+              "  if (!payload || !payload.exp) return false;",
+              "  const now = Math.floor(Date.now() / 1000);",
+              "  return (payload.exp - now) > MIN_VALIDITY_SECONDS;",
+              "}",
+              "",
+              "const tokenAtual = getVar('access_token');",
+              "if (tokenValido(tokenAtual)) {",
+              "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + tokenAtual });",
+              "  return;",
+              "}",
+              "",
+              "const baseUrl = getVar('identidade_base_url');",
+              "const username = getVar('usuario_email');",
+              "const password = getVar('usuario_senha');",
+              "",
+              "if (!baseUrl || !username || !password) {",
+              "  throw new Error('Variaveis obrigatorias ausentes para gerar token automatico');",
+              "}",
+              "",
+              "pm.sendRequest({",
+              "  url: baseUrl + '/auth/token',",
+              "  method: 'POST',",
+              "  header: { 'Content-Type': 'application/json' },",
+              "  body: {",
+              "    mode: 'raw',",
+              "    raw: JSON.stringify({ username: username, password: password })",
+              "  }",
+              "}, function (err, res) {",
+              "  if (err || !res) {",
+              "    throw new Error('Falha no /auth/token: ' + (err ? err.message : 'sem resposta'));",
+              "  }",
+              "  if (res.code !== 200) {",
+              "    throw new Error('/auth/token retornou status ' + res.code + ' body=' + res.text());",
+              "  }",
+              "",
+              "  const json = res.json();",
+              "  if (!json.access_token) {",
+              "    throw new Error('Resposta sem access_token');",
+              "  }",
+              "",
+              "  setVar('access_token', json.access_token);",
+              "  pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + json.access_token });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gerar token (POST /auth/token)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{usuario_email}}\",\n  \"password\": \"{{usuario_senha}}\"\n}"
+        },
+        "url": {
+          "raw": "{{identidade_base_url}}/auth/token",
+          "host": [
+            "{{identidade_base_url}}"
+          ],
+          "path": [
+            "auth",
+            "token"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "var json = pm.response.json();",
+              "if (json && json.access_token) {",
+              "  pm.collectionVariables.set('access_token', json.access_token);",
+              "  pm.environment.set('access_token', json.access_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
