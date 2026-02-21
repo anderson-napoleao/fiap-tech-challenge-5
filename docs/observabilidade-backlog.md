@@ -92,6 +92,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-usuario`
 - Entrega: dependencias e configuracoes para logs/tracing.
+- Status: concluido em 2026-02-21
+- Evidencia: `servico-usuario/pom.xml`, `servico-usuario/src/main/resources/logback-spring.xml`
 - Criterios de aceite:
   - `spring-boot-starter-actuator` adicionado no `pom.xml`;
   - `logstash-logback-encoder` adicionado no `pom.xml`;
@@ -101,6 +103,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-usuario`
 - Entrega: correlacao de logs por trace em todas as rotas.
+- Status: concluido em 2026-02-21
+- Evidencia: `servico-usuario/src/main/java/br/com/condominio/servico/usuario/infrastructure/observability/HttpLoggingInterceptor.java`, `servico-usuario/src/main/java/br/com/condominio/servico/usuario/infrastructure/observability/ObservabilityWebMvcConfig.java`, `servico-usuario/src/main/java/br/com/condominio/servico/usuario/infrastructure/web/error/GlobalExceptionHandler.java`
 - Criterios de aceite:
   - requests em `/users` e `/users/me` geram `traceId`/`spanId`;
   - logs de erro em `GlobalExceptionHandler` preservam `traceId`;
@@ -110,6 +114,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-usuario`
 - Entrega: propagacao de contexto de trace em chamadas para `servico-identidade`.
+- Status: concluido em 2026-02-21
+- Evidencia: `servico-usuario/src/main/java/br/com/condominio/servico/usuario/adapter/out/IdentityGatewayAdapter.java`
 - Criterios de aceite:
   - chamada de `IdentityGatewayAdapter` envia cabecalhos de trace;
   - request encadeada `servico-usuario -> servico-identidade` pode ser correlacionada por `traceId`;
@@ -119,6 +125,8 @@ Adicionar observabilidade padronizada no projeto com:
 
 - Modulo: `servico-usuario`
 - Entrega: logs estruturados de operacoes de API.
+- Status: concluido em 2026-02-21
+- Evidencia: `servico-usuario/src/main/java/br/com/condominio/servico/usuario/adapter/in/web/UserController.java`, `servico-usuario/src/main/java/br/com/condominio/servico/usuario/infrastructure/web/error/GlobalExceptionHandler.java`, `servico-usuario/src/main/java/br/com/condominio/servico/usuario/adapter/out/IdentityGatewayAdapter.java`
 - Criterios de aceite:
   - `UserController` registra eventos principais por operacao;
   - conflito e not found geram logs adequados de nivel `WARN`;
