@@ -1,0 +1,26 @@
+package br.com.condominio.servico.encomenda.architecture;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import br.com.condominio.servico.encomenda.application.port.in.ReceberEncomendaUseCase;
+import java.lang.reflect.Method;
+import org.junit.jupiter.api.Test;
+
+class UseCaseContractTest {
+
+  @Test
+  void useCasesDevemReceberApenasCommandComoEntrada() {
+    validarMetodoDeEntrada(ReceberEncomendaUseCase.class);
+  }
+
+  private void validarMetodoDeEntrada(Class<?> useCaseInterface) {
+    for (Method method : useCaseInterface.getDeclaredMethods()) {
+      assertEquals(1, method.getParameterCount(), useCaseInterface.getSimpleName() + "." + method.getName());
+      assertEquals(
+          "Command",
+          method.getParameterTypes()[0].getSimpleName(),
+          useCaseInterface.getSimpleName() + "." + method.getName()
+      );
+    }
+  }
+}
