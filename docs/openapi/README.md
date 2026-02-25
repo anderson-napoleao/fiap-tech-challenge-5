@@ -28,9 +28,9 @@ Os endpoints de documentacao estao habilitados sem restricao por profile.
 - `servico-encomenda` (porta `8083`)
   - `http://localhost:8083/v3/api-docs`
   - `http://localhost:8083/swagger-ui/index.html`
-- `servico-notificacao` (porta `8087`)
-  - `http://localhost:8087/v3/api-docs`
-  - `http://localhost:8087/swagger-ui/index.html`
+- `servico-notificacao` (porta `8084` no Docker, `8087` em profile local)
+  - `http://localhost:8084/v3/api-docs`
+  - `http://localhost:8084/swagger-ui/index.html`
 
 ## Como usar autenticacao na Swagger UI
 

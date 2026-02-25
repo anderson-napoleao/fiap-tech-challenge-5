@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { Header } from '@/components/layout/Header'
@@ -21,10 +21,19 @@ export function SignUpPage({ onSignUpSuccess }: SignUpPageProps) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CadastroForm>()
 
   const senha = watch('senha')
+  const tipoUsuarioSelecionado = watch('tipo')
+
+  useEffect(() => {
+    if (tipoUsuarioSelecionado === TipoUsuario.FUNCIONARIO) {
+      setValue('apartamento', '')
+      setValue('bloco', '')
+    }
+  }, [tipoUsuarioSelecionado, setValue])
 
   const onSubmit = async (data: CadastroForm) => {
     setIsLoading(true)
@@ -316,39 +325,40 @@ export function SignUpPage({ onSignUpSuccess }: SignUpPageProps) {
                   )}
                 </div>
 
-                {/* Dados Residenciais (apenas para moradores) */}
-                <div id="dados-residenciais" className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">Dados Residenciais</h3>
-                  <p className="text-sm text-gray-500">Apenas para moradores</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="apartamento" className="block text-sm font-medium text-gray-700">
-                        Apartamento
-                      </label>
-                      <input
-                        {...register('apartamento')}
-                        type="text"
-                        id="apartamento"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                        placeholder="101"
-                      />
-                    </div>
+                {tipoUsuarioSelecionado === TipoUsuario.MORADOR && (
+                  <div id="dados-residenciais" className="space-y-4">
+                    <h3 className="text-lg font-medium text-gray-900">Dados Residenciais</h3>
+                    <p className="text-sm text-gray-500">Apenas para moradores</p>
 
-                    <div>
-                      <label htmlFor="bloco" className="block text-sm font-medium text-gray-700">
-                        Bloco
-                      </label>
-                      <input
-                        {...register('bloco')}
-                        type="text"
-                        id="bloco"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                        placeholder="A"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="apartamento" className="block text-sm font-medium text-gray-700">
+                          Apartamento
+                        </label>
+                        <input
+                          {...register('apartamento')}
+                          type="text"
+                          id="apartamento"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="101"
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="bloco" className="block text-sm font-medium text-gray-700">
+                          Bloco
+                        </label>
+                        <input
+                          {...register('bloco')}
+                          type="text"
+                          id="bloco"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="A"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 <div>
                   <Button

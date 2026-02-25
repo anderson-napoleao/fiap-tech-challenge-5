@@ -1,20 +1,21 @@
 # Build stage
-FROM maven:3.9.6-openjdk-21-slim AS builder
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
 # Copy pom and download dependencies (layer caching)
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+COPY pom.xml ./pom.xml
+COPY servico-usuario/pom.xml ./servico-usuario/pom.xml
+RUN mvn -f servico-usuario/pom.xml dependency:go-offline -B
 
 # Copy source code
-COPY src ./src
+COPY servico-usuario/src ./servico-usuario/src
 
 # Build without tests
-RUN mvn clean package -DskipTests -B
+RUN mvn -f servico-usuario/pom.xml clean package -DskipTests -B
 
 # Runtime stage
-FROM openjdk:21-jre-slim
+FROM eclipse-temurin:21-jre-jammy
 
 # Install curl for health checks
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
@@ -22,7 +23,7 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # Copy jar from build stage
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/servico-usuario/target/*.jar app.jar
 
 # Create non-root user
 RUN addgroup --system spring && adduser --system spring --ingroup spring

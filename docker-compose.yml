@@ -76,9 +76,8 @@ services:
       - "9092:9092"
     environment:
       ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
@@ -154,6 +153,7 @@ services:
     image: docker.elastic.co/beats/filebeat:8.12.0
     container_name: condominio-filebeat
     user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
     volumes:
       - ./elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -193,8 +193,8 @@ services:
 
   servico-identidade:
     build:
-      context: ./servico-identidade
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: servico-identidade/Dockerfile
     container_name: condominio-servico-identidade
     ports:
       - "8081:8081"
@@ -214,8 +214,8 @@ services:
 
   servico-usuario:
     build:
-      context: ./servico-usuario
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: servico-usuario/Dockerfile
     container_name: condominio-servico-usuario
     ports:
       - "8082:8082"
@@ -237,8 +237,8 @@ services:
 
   servico-encomenda:
     build:
-      context: ./servico-encomenda
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: servico-encomenda/Dockerfile
     container_name: condominio-servico-encomenda
     ports:
       - "8083:8083"
@@ -260,8 +260,8 @@ services:
 
   servico-notificacao:
     build:
-      context: ./servico-notificacao
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: servico-notificacao/Dockerfile
     container_name: condominio-servico-notificacao
     ports:
       - "8084:8084"
@@ -270,9 +270,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-notificacao:5432/condominio_notificacao
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVICO_USUARIO_URL: http://servico-usuario:8082
+      SERVICO_IDENTIDADE_URL: http://servico-identidade:8081
       LOGGING_LEVEL_ROOT: INFO
     depends_on:
       - postgres-notificacao
+      - kafka
+      - servico-usuario
+      - servico-identidade
       - elasticsearch
     networks:
       - condominio-net
@@ -307,6 +313,16 @@ services:
       - postgres-usuario
       - postgres-encomenda
       - postgres-notificacao
+    networks:
+      - condominio-net
+
+  docs-site:
+    build:
+      context: .
+      dockerfile: docs/Dockerfile
+    container_name: condominio-docs
+    ports:
+      - "8090:80"
     networks:
       - condominio-net
 

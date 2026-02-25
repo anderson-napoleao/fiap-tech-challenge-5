@@ -34,6 +34,10 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Ajusta nginx para rodar como usuario nao-root (PID em diretorio gravavel)
+RUN sed -i 's|^user .*;|# user disabled for non-root runtime;|' /etc/nginx/nginx.conf && \
+    sed -i 's|pid[[:space:]]*/run/nginx.pid;|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001

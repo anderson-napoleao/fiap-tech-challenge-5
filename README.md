@@ -48,6 +48,15 @@ docker compose up -d
 - Encomenda: `http://localhost:8083/swagger-ui/index.html`
 - Notificação: `http://localhost:8084/swagger-ui/index.html` (Docker) / `8087` (profile local)
 
+### JavaDoc e Docker Docs
+
+- Portal de documentação técnica: `http://localhost:8090`
+- JavaDoc Identidade: `http://localhost:8090/javadocs/servico-identidade/index.html`
+- JavaDoc Usuário: `http://localhost:8090/javadocs/servico-usuario/index.html`
+- JavaDoc Encomenda: `http://localhost:8090/javadocs/servico-encomenda/index.html`
+- JavaDoc Notificação: `http://localhost:8090/javadocs/servico-notificacao/index.html`
+- Guia Docker: `http://localhost:8090/DOCKER.md`
+
 ### Fluxo básico de uso
 
 1. Criar usuário no frontend (morador).
