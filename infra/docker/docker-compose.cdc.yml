@@ -1,4 +1,16 @@
 services:
+  postgres-identidade:
+    image: debezium/postgres:16
+    container_name: condominio-postgres-identidade
+    ports:
+      - "5431:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: condominio_identidade
+    networks:
+      - cdc-net
+
   postgres:
     image: debezium/postgres:16
     container_name: condominio-postgres
@@ -8,6 +20,18 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: condominio
+    networks:
+      - cdc-net
+
+  postgres-usuario:
+    image: debezium/postgres:16
+    container_name: condominio-postgres-usuario
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: condominio_usuario
     networks:
       - cdc-net
 
@@ -59,7 +83,9 @@ services:
       STATUS_STORAGE_REPLICATION_FACTOR: 1
     depends_on:
       - kafka
+      - postgres-identidade
       - postgres
+      - postgres-usuario
       - postgres-notificacao
     networks:
       - cdc-net
@@ -70,7 +96,9 @@ services:
     ports:
       - "8085:8080"
     depends_on:
+      - postgres-identidade
       - postgres
+      - postgres-usuario
       - postgres-notificacao
     networks:
       - cdc-net

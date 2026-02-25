@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16-alpine:///servico_notificacao_it
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+security:
+  jwt:
+    secret: condominio-jwt-secret-local-2026-seguro
+    issuer: servico-identidade

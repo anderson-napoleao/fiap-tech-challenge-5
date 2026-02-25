@@ -7,7 +7,5 @@ CREATE TABLE usuarios (
   telefone VARCHAR(30),
   cpf VARCHAR(20),
   apartamento VARCHAR(20),
-  bloco VARCHAR(20),
-  cargo VARCHAR(80),
-  departamento VARCHAR(80)
+  bloco VARCHAR(20)
 );

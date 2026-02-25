@@ -1,6 +1,6 @@
 package br.com.condominio.identidade.infrastructure.security;
 
-import br.com.condominio.identidade.infrastructure.userstore.InMemoryUsuarioStore;
+import br.com.condominio.identidade.application.port.out.UsuarioStorePort;
 import java.util.Set;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -50,7 +50,7 @@ public class DefaultSecurityConfig {
   }
 
   @Bean
-  public CommandLineRunner bootstrapAdmin(InMemoryUsuarioStore usuarioStore) {
+  public CommandLineRunner bootstrapAdmin(UsuarioStorePort usuarioStore) {
     return args -> {
       if (!usuarioStore.existsByUsername("admin")) {
         usuarioStore.save("admin", "admin", Set.of("ADMIN"));

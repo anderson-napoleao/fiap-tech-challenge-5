@@ -1,0 +1,300 @@
+version: '3.8'
+
+services:
+  # Infraestrutura de Dados
+  postgres-identidade:
+    image: debezium/postgres:16
+    container_name: condominio-postgres-identidade
+    ports:
+      - "5431:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: condominio_identidade
+    networks:
+      - condominio-net
+    volumes:
+      - postgres_identidade_data:/var/lib/postgresql/data
+
+  postgres-usuario:
+    image: debezium/postgres:16
+    container_name: condominio-postgres-usuario
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: condominio_usuario
+    networks:
+      - condominio-net
+    volumes:
+      - postgres_usuario_data:/var/lib/postgresql/data
+
+  postgres-encomenda:
+    image: debezium/postgres:16
+    container_name: condominio-postgres-encomenda
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: condominio_encomenda
+    networks:
+      - condominio-net
+    volumes:
+      - postgres_encomenda_data:/var/lib/postgresql/data
+
+  postgres-notificacao:
+    image: debezium/postgres:16
+    container_name: condominio-postgres-notificacao
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: condominio_notificacao
+    networks:
+      - condominio-net
+    volumes:
+      - postgres_notificacao_data:/var/lib/postgresql/data
+
+  # Infraestrutura Kafka
+  zookeeper:
+    image: quay.io/debezium/zookeeper:2.7
+    container_name: condominio-zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - condominio-net
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+
+  kafka:
+    image: quay.io/debezium/kafka:2.7
+    container_name: condominio-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    networks:
+      - condominio-net
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  kafka-connect:
+    image: quay.io/debezium/connect:2.7
+    container_name: condominio-kafka-connect
+    ports:
+      - "8085:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+    depends_on:
+      - kafka
+      - postgres-identidade
+      - postgres-usuario
+      - postgres-encomenda
+      - postgres-notificacao
+    networks:
+      - condominio-net
+
+  # Stack ELK para Logs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: condominio-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    networks:
+      - condominio-net
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: condominio-logstash
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./elk/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - condominio-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: condominio-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - condominio-net
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.0
+    container_name: condominio-filebeat
+    user: root
+    volumes:
+      - ./elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - logstash
+    networks:
+      - condominio-net
+
+  # Serviços da Aplicação
+  servico-identidade:
+    build:
+      context: ./servico-identidade
+      dockerfile: Dockerfile
+    container_name: condominio-servico-identidade
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-identidade:5432/condominio_identidade
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - postgres-identidade
+      - elasticsearch
+    networks:
+      - condominio-net
+    labels:
+      - "logging.service=servico-identidade"
+
+  servico-usuario:
+    build:
+      context: ./servico-usuario
+      dockerfile: Dockerfile
+    container_name: condominio-servico-usuario
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-usuario:5432/condominio_usuario
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SERVICO_IDENTIDADE_URL: http://servico-identidade:8081
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - postgres-usuario
+      - servico-identidade
+      - elasticsearch
+    networks:
+      - condominio-net
+    labels:
+      - "logging.service=servico-usuario"
+
+  servico-encomenda:
+    build:
+      context: ./servico-encomenda
+      dockerfile: Dockerfile
+    container_name: condominio-servico-encomenda
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-encomenda:5432/condominio_encomenda
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SERVICO_IDENTIDADE_URL: http://servico-identidade:8081
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - postgres-encomenda
+      - servico-identidade
+      - elasticsearch
+    networks:
+      - condominio-net
+    labels:
+      - "logging.service=servico-encomenda"
+
+  servico-notificacao:
+    build:
+      context: ./servico-notificacao
+      dockerfile: Dockerfile
+    container_name: condominio-servico-notificacao
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-notificacao:5432/condominio_notificacao
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - postgres-notificacao
+      - elasticsearch
+    networks:
+      - condominio-net
+    labels:
+      - "logging.service=servico-notificacao"
+
+  # Interfaces de Visualização
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: condominio-kafka-ui
+    ports:
+      - "8086:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: condominio
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+    depends_on:
+      - kafka
+      - kafka-connect
+    networks:
+      - condominio-net
+
+  adminer:
+    image: adminer:4
+    container_name: condominio-adminer
+    ports:
+      - "8087:8080"
+    depends_on:
+      - postgres-identidade
+      - postgres-usuario
+      - postgres-encomenda
+      - postgres-notificacao
+    networks:
+      - condominio-net
+
+networks:
+  condominio-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_identidade_data:
+  postgres_usuario_data:
+  postgres_encomenda_data:
+  postgres_notificacao_data:
+  zookeeper_data:
+  kafka_data:
+  elasticsearch_data:

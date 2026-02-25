@@ -13,10 +13,14 @@ import br.com.condominio.servico.encomenda.infrastructure.persistence.repository
 import br.com.condominio.servico.encomenda.infrastructure.persistence.repository.SpringDataOutboxEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
+@ActiveProfiles("integration")
+@EnabledIfSystemProperty(named = "testcontainers.enabled", matches = "true")
 class BaixarEncomendaRetiradaIntegrationTest {
 
   @Autowired
