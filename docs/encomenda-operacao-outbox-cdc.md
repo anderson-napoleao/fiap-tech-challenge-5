@@ -9,6 +9,8 @@ Publicar eventos de `outbox_event` do `servico-encomenda` para RabbitMQ com sema
 - `infra/docker/docker-compose.cdc.yml`
 - `infra/debezium/encomenda-outbox-connector.json`
 - `infra/debezium/encomenda-rabbit-sink-connector.json`
+- `docs/postman/encomenda-e2e.postman_collection.json`
+- `docs/encomenda-teste-e2e.md`
 
 ## Subir stack CDC local
 
@@ -21,7 +23,7 @@ docker compose -f infra/docker/docker-compose.cdc.yml up -d
 ## Subir servico-encomenda com Postgres (perfil CDC)
 
 ```powershell
-mvn -pl servico-encomenda spring-boot:run -Dspring-boot.run.profiles=cdc
+mvn -pl servico-encomenda spring-boot:run "-Dspring-boot.run.profiles=cdc"
 ```
 
 ## Registrar conectores no Kafka Connect

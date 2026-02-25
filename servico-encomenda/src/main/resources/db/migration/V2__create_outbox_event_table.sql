@@ -4,7 +4,7 @@ CREATE TABLE outbox_event (
   aggregateid VARCHAR(100) NOT NULL,
   type VARCHAR(120) NOT NULL,
   event_version INTEGER NOT NULL,
-  payload CLOB NOT NULL,
+  payload TEXT NOT NULL,
   event_timestamp TIMESTAMP WITH TIME ZONE NOT NULL
 );
 

@@ -20,7 +20,6 @@
     "transforms.outbox.table.field.event.id": "id",
     "transforms.outbox.table.field.event.key": "aggregateid",
     "transforms.outbox.table.field.event.payload": "payload",
-    "transforms.outbox.table.field.event.timestamp": "event_timestamp",
     "transforms.outbox.table.field.event.type": "type",
     "transforms.outbox.route.topic.replacement": "encomenda.recebida",
     "tombstones.on.delete": "false"

@@ -3,7 +3,6 @@ package br.com.condominio.servico.encomenda.infrastructure.persistence.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
@@ -27,12 +26,14 @@ public class OutboxEventEntity {
   @Column(name = "event_version", nullable = false)
   private Integer eventVersion;
 
-  @Lob
-  @Column(name = "payload", nullable = false)
+  @Column(name = "payload", nullable = false, columnDefinition = "TEXT")
   private String payload;
 
   @Column(name = "event_timestamp", nullable = false)
   private Instant eventTimestamp;
+
+  @Column(name = "event_timestamp_ms", nullable = false)
+  private Long eventTimestampMs;
 
   public String getId() {
     return id;
@@ -88,5 +89,13 @@ public class OutboxEventEntity {
 
   public void setEventTimestamp(Instant eventTimestamp) {
     this.eventTimestamp = eventTimestamp;
+  }
+
+  public Long getEventTimestampMs() {
+    return eventTimestampMs;
+  }
+
+  public void setEventTimestampMs(Long eventTimestampMs) {
+    this.eventTimestampMs = eventTimestampMs;
   }
 }

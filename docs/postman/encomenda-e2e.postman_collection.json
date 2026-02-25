@@ -1,0 +1,254 @@
+{
+  "info": {
+    "_postman_id": "6f3cae5e-6b2f-4cca-9e1d-6f2e661dbe29",
+    "name": "Condominio - E2E Encomenda",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Fluxo de teste E2E: cria usuario FUNCIONARIO na identidade, gera token JWT e registra recebimento de encomenda."
+  },
+  "item": [
+    {
+      "name": "Health - Identidade",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{identidadeBaseUrl}}/actuator/health",
+          "host": [
+            "{{identidadeBaseUrl}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Health - Encomenda",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{encomendaBaseUrl}}/actuator/health",
+          "host": [
+            "{{encomendaBaseUrl}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Criar Usuario FUNCIONARIO (Lucas Amaral)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const email = `lucas.amaral+${Date.now()}@teste.com`;",
+              "pm.collectionVariables.set('funcionarioEmail', email);",
+              "pm.collectionVariables.set('funcionarioSenha', '123456');",
+              "pm.collectionVariables.set('funcionarioNome', 'Lucas Amaral');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('funcionarioIdentityId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Basic {{adminBasicAuth}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{funcionarioEmail}}\",\n  \"password\": \"{{funcionarioSenha}}\",\n  \"role\": \"FUNCIONARIO\"\n}"
+        },
+        "url": {
+          "raw": "{{identidadeBaseUrl}}/admin/users",
+          "host": [
+            "{{identidadeBaseUrl}}"
+          ],
+          "path": [
+            "admin",
+            "users"
+          ]
+        },
+        "description": "Identidade nao possui campo de nome. O nome \"Lucas Amaral\" fica registrado na collection apenas para referencia de teste."
+      },
+      "response": []
+    },
+    {
+      "name": "Gerar Token FUNCIONARIO",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('funcionarioAccessToken', body.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{funcionarioEmail}}\",\n  \"password\": \"{{funcionarioSenha}}\"\n}"
+        },
+        "url": {
+          "raw": "{{identidadeBaseUrl}}/auth/token",
+          "host": [
+            "{{identidadeBaseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Receber Encomenda (Portaria)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('encomendaId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{funcionarioAccessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nomeDestinatario\": \"Ana Moradora\",\n  \"apartamento\": \"101\",\n  \"bloco\": \"A\",\n  \"descricao\": \"Caixa pequena\"\n}"
+        },
+        "url": {
+          "raw": "{{encomendaBaseUrl}}/portaria/encomendas",
+          "host": [
+            "{{encomendaBaseUrl}}"
+          ],
+          "path": [
+            "portaria",
+            "encomendas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Status Connector Outbox (Opcional)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{connectBaseUrl}}/connectors/encomenda-outbox-connector/status",
+          "host": [
+            "{{connectBaseUrl}}"
+          ],
+          "path": [
+            "connectors",
+            "encomenda-outbox-connector",
+            "status"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "identidadeBaseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "encomendaBaseUrl",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "connectBaseUrl",
+      "value": "http://localhost:8084"
+    },
+    {
+      "key": "adminBasicAuth",
+      "value": "YWRtaW46YWRtaW4="
+    },
+    {
+      "key": "funcionarioNome",
+      "value": "Lucas Amaral"
+    },
+    {
+      "key": "funcionarioEmail",
+      "value": ""
+    },
+    {
+      "key": "funcionarioSenha",
+      "value": "123456"
+    },
+    {
+      "key": "funcionarioIdentityId",
+      "value": ""
+    },
+    {
+      "key": "funcionarioAccessToken",
+      "value": ""
+    },
+    {
+      "key": "encomendaId",
+      "value": ""
+    }
+  ]
+}

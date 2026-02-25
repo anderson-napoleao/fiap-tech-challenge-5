@@ -69,6 +69,7 @@ public class RegistrarRecebimentoComOutboxAdapter implements RegistrarRecebiment
     outboxEvent.setEventVersion(event.eventVersion());
     outboxEvent.setPayload(outboxPayloadMapper.toJson(event));
     outboxEvent.setEventTimestamp(event.occurredAt());
+    outboxEvent.setEventTimestampMs(event.occurredAt().toEpochMilli());
     outboxEventRepository.save(outboxEvent);
 
     return encomendaSalva;
