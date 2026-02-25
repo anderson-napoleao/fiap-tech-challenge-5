@@ -2,6 +2,7 @@ package br.com.condominio.servico.notificacao.adapter.in.messaging;
 
 import br.com.condominio.servico.notificacao.application.port.in.ProcessarEncomendaRecebidaPorUnidadeUseCase;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,13 @@ public class EncomendaRecebidaKafkaListener {
 
   private EncomendaRecebidaMessage parse(String payload) {
     try {
-      return objectMapper.readValue(payload, EncomendaRecebidaMessage.class);
+      JsonNode root = objectMapper.readTree(payload);
+      JsonNode content = root.hasNonNull("payload") ? root.get("payload") : root;
+
+      if (content.isTextual()) {
+        return objectMapper.readValue(content.asText(), EncomendaRecebidaMessage.class);
+      }
+      return objectMapper.treeToValue(content, EncomendaRecebidaMessage.class);
     } catch (JsonProcessingException exception) {
       throw new IllegalArgumentException("Falha ao desserializar evento encomenda.recebida", exception);
     }
