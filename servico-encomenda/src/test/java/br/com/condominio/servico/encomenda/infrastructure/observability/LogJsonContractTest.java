@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.condominio.servico.encomenda.adapter.in.web.PortariaEncomendaController;
 import br.com.condominio.servico.encomenda.application.exception.EncomendaNaoEncontradaException;
 import br.com.condominio.servico.encomenda.application.port.in.BaixarEncomendaRetiradaUseCase;
+import br.com.condominio.servico.encomenda.application.port.in.BuscarEncomendaPorIdUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.ReceberEncomendaUseCase;
 import br.com.condominio.servico.encomenda.domain.StatusEncomenda;
 import br.com.condominio.servico.encomenda.infrastructure.security.SecurityConfig;
@@ -54,6 +55,9 @@ class LogJsonContractTest {
 
   @MockBean
   private BaixarEncomendaRetiradaUseCase baixarEncomendaRetiradaUseCase;
+
+  @MockBean
+  private BuscarEncomendaPorIdUseCase buscarEncomendaPorIdUseCase;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 

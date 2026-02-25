@@ -3,11 +3,11 @@
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
-    "database.hostname": "postgres",
+    "database.hostname": "postgres-encomenda",
     "database.port": "5432",
     "database.user": "postgres",
     "database.password": "postgres",
-    "database.dbname": "condominio",
+    "database.dbname": "condominio_encomenda",
     "database.server.name": "condominio",
     "topic.prefix": "condominio",
     "schema.include.list": "public",

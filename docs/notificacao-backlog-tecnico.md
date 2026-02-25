@@ -119,7 +119,7 @@ Implementar no `servico-notificacao` o fluxo de notificacao de chegada de encome
 - Modulo: raiz e ambiente local
 - Entrega: configuracao operacional para consumir entrada e publicar saida a partir do outbox.
 - Status: planejado em 2026-02-25
-- Evidencia: `infra/docker/docker-compose.cdc.yml`, `infra/debezium/`, `docs/notificacao-operacao-outbox-cdc.md`
+- Evidencia: `docker-compose.yml`, `infra/debezium/`, `DOCKER.md`
 - Criterios de aceite:
   - evento de entrada `encomenda.recebida` chega ao `servico-notificacao`;
   - eventos de saida de notificacao chegam ao topico/fila alvo;

@@ -164,6 +164,33 @@ services:
       - condominio-net
 
   # Serviços da Aplicação
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_IDENTITY_URL: http://localhost:8081
+        VITE_API_USUARIO_URL: http://localhost:8082
+        VITE_API_ENCOMENDA_URL: http://localhost:8083
+        VITE_API_NOTIFICACAO_URL: http://localhost:8084
+    container_name: condominio-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_IDENTITY_URL: http://localhost:8081
+      VITE_API_USUARIO_URL: http://localhost:8082
+      VITE_API_ENCOMENDA_URL: http://localhost:8083
+      VITE_API_NOTIFICACAO_URL: http://localhost:8084
+    depends_on:
+      - servico-identidade
+      - servico-usuario
+      - servico-encomenda
+      - servico-notificacao
+    networks:
+      - condominio-net
+    labels:
+      - "logging.service=frontend"
+
   servico-identidade:
     build:
       context: ./servico-identidade

@@ -39,6 +39,9 @@ if ($Build) {
     Write-Host "📦 Build servico-notificacao..." -ForegroundColor Blue
     docker build -t condominio/servico-notificacao:latest ./servico-notificacao
     
+    Write-Host "📦 Build frontend..." -ForegroundColor Blue
+    docker build -t condominio/frontend:latest ./frontend
+    
     Write-Success "Build concluído!"
 }
 
@@ -88,6 +91,8 @@ Write-Step "Subindo serviços da aplicação"
 docker-compose up -d servico-identidade
 Start-Sleep 30
 docker-compose up -d servico-usuario servico-encomenda servico-notificacao
+Start-Sleep 30
+docker-compose up -d frontend
 
 Write-Step "Subindo interfaces de visualização"
 docker-compose up -d kafka-ui adminer
@@ -95,12 +100,15 @@ docker-compose up -d kafka-ui adminer
 Write-Success "Sistema iniciado com sucesso!"
 
 Write-Host ""
+Write-Host "🌐 Aplicação:" -ForegroundColor Magenta
+Write-Host "   • Frontend:           http://localhost:3000"
+Write-Host ""
 Write-Host "📊 Interfaces disponíveis:" -ForegroundColor Magenta
 Write-Host "   • Kibana (Logs):      http://localhost:5601"
 Write-Host "   • Kafka UI:           http://localhost:8086"
 Write-Host "   • Adminer (DB):       http://localhost:8087"
 Write-Host ""
-Write-Host "🏢 Serviços:" -ForegroundColor Magenta
+Write-Host "🏢 Serviços (APIs):" -ForegroundColor Magenta
 Write-Host "   • Identidade:         http://localhost:8081"
 Write-Host "   • Usuário:            http://localhost:8082"
 Write-Host "   • Encomenda:          http://localhost:8083"

@@ -92,38 +92,28 @@ Execução local mais rápida (sem OWASP):
 mvn -Pquality -DskipTests '-Ddependency-check.skip=true' verify
 ```
 
-### Smoke test CDC
-
-```powershell
-./scripts/smoke-test-encomenda-cdc.ps1 -StartInfra
-```
-
 ## Relatório técnico do sistema
 
 ## Visão geral
 
-O sistema é composto por:
+O sistema implementa uma arquitetura distribuída orientada a serviços para suporte às operações de portaria e relacionamento com moradores.
 
-- `servico-identidade`: autenticação, emissão de JWT e gestão administrativa de identidades
-- `servico-usuario`: cadastro e manutenção de perfil de moradores
-- `servico-encomenda`: recebimento e baixa de retirada de encomendas na portaria
-- `servico-notificacao`: processamento e confirmação de notificações para moradores
-- `frontend`: interface web para os fluxos de negócio
-- `tests-integracao-sistema`: validação ponta a ponta entre módulos
+- `servico-identidade`: serviço responsável por autenticação, autorização e emissão de tokens JWT utilizados pelos demais módulos.
+- `servico-usuario`: serviço responsável pelo ciclo de vida cadastral do usuário, incluindo dados pessoais e dados residenciais.
+- `servico-encomenda`: serviço responsável pelo registro de recebimento e baixa de retirada de encomendas, com regras de domínio da portaria.
+- `servico-notificacao`: serviço responsável pela geração, persistência e confirmação de notificações associadas a eventos de encomenda.
+- `frontend`: camada de apresentação web para execução dos fluxos operacionais por funcionário e morador.
+- `tests-integracao-sistema`: módulo dedicado à validação de comportamento integrado entre serviços, banco de dados e contratos de API.
 
 ## Modelo arquitetônico
 
-O backend aplica Clean Architecture com separação de responsabilidades:
+O backend adota Clean Architecture como modelo de organização estrutural e de governança de dependências.
 
-- `domain`: regras centrais e entidades ricas, sem framework
-- `application`: casos de uso e portas de entrada/saída
-- `adapter`/`infrastructure`: HTTP, persistência, segurança, observabilidade e integrações
+- `domain`: concentra entidades e regras de negócio centrais, sem dependência de frameworks ou infraestrutura.
+- `application`: concentra casos de uso e contratos (portas), coordenando o domínio sem acoplamento a detalhes tecnológicos.
+- `adapter` e `infrastructure`: implementam mecanismos de entrada e saída (HTTP, persistência, segurança, mensageria e observabilidade).
 
-Princípios aplicados:
-
-- dependências apontando para dentro
-- regras de negócio isoladas de frameworks
-- integração externa mediada por portas para preservar testabilidade
+As dependências são orientadas para o núcleo, de modo que decisões de framework, banco ou transporte possam evoluir sem comprometer a lógica de negócio.
 
 ## Tecnologias e ferramentas
 
@@ -172,42 +162,40 @@ Princípios aplicados:
 - SpotBugs
 - JaCoCo
 - OWASP Dependency-Check
-- GitHub Actions (`build-test`, `integration-testcontainers`, `quality`)
 
 ## Desafios técnicos e soluções adotadas
 
-1. Consistência entre escrita de negócio e publicação de evento.
-- Desafio: evitar perda de evento entre transação de domínio e mensageria.
-- Solução: padrão Outbox + CDC com Debezium/Kafka Connect.
+1. Consistência transacional entre estado de negócio e publicação de evento.
+- Problema técnico: evitar divergência entre dados persistidos e mensagens emitidas.
+- Solução adotada: padrão Outbox com CDC (Debezium/Kafka Connect), preservando atomicidade na escrita e entrega assíncrona confiável.
 
-2. Evolução de persistência para ambiente mais realista.
-- Desafio: sair de cenários simplificados (H2 e store em memória).
-- Solução: migração para PostgreSQL com Flyway consolidado por módulo.
+2. Migração de persistência para cenário aderente a produção.
+- Problema técnico: limitações de banco em memória para validação de comportamento real.
+- Solução adotada: padronização em PostgreSQL com versionamento de esquema via Flyway por serviço.
 
-3. Segurança por papel em APIs de negócio.
-- Desafio: garantir autorização coerente por contexto funcional.
-- Solução: regras de `ROLE_FUNCIONARIO` e `ROLE_MORADOR` nos serviços consumidores de JWT.
+3. Controle de acesso por papel em fronteiras de API.
+- Problema técnico: garantir segregação funcional entre operações de funcionário e morador.
+- Solução adotada: políticas explícitas com `ROLE_FUNCIONARIO` e `ROLE_MORADOR` nos serviços protegidos por JWT.
 
-4. Observabilidade em múltiplos serviços.
-- Desafio: diagnosticar erros e rastrear requisições distribuídas.
-- Solução: logs JSON padronizados com `trace_id`/`span_id` e stack ELK.
+4. Rastreabilidade e diagnóstico em ambiente distribuído.
+- Problema técnico: correlação de falhas entre múltiplos serviços.
+- Solução adotada: logging estruturado em JSON com `trace_id` e `span_id`, integrado à stack ELK para análise operacional.
 
-5. Testes integrados confiáveis entre módulos.
-- Desafio: validar interação real entre serviços e banco.
-- Solução: Testcontainers nos testes de integração e módulo dedicado cross-module.
+5. Confiabilidade de integração entre módulos.
+- Problema técnico: reduzir falso positivo de testes isolados frente ao comportamento real.
+- Solução adotada: testes integrados com Testcontainers e suíte cross-module para validação ponta a ponta.
 
 ## Ênfase em qualidade de software
 
-- testes de domínio, aplicação e web por módulo
-- testes de arquitetura (ArchUnit) para proteção de camadas
-- testes integrados com banco real via Testcontainers
-- testes cross-module para fluxos ponta a ponta
-- análise estática no profile Maven `quality`
-- gate de CI para reduzir regressão antes de merge
+A estratégia de qualidade foi estruturada para combinar correção funcional, aderência arquitetural e mantenabilidade evolutiva.
+
+- Verificação em múltiplos níveis: testes de domínio, aplicação, web e integração.
+- Proteção arquitetural: regras automatizadas com ArchUnit para preservar fronteiras da Clean Architecture.
+- Realismo de execução: uso de Testcontainers para validar persistência e integração em ambiente próximo ao operacional.
+- Governança estática: análise com Checkstyle, PMD, SpotBugs, JaCoCo e OWASP Dependency-Check no profile Maven `quality`.
+- Rastreabilidade técnica: observabilidade com logs estruturados e correlação distribuída para apoiar investigação de defeitos.
 
 ## Documentação complementar
 
 - OpenAPI: `docs/openapi`
-- Qualidade: `docs/qualidade-*.md`
 - Operação Docker: `DOCKER.md`
-- Observabilidade: `docs/observabilidade-*.md`

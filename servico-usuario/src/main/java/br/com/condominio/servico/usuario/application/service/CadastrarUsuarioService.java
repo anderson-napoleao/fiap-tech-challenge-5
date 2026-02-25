@@ -5,14 +5,13 @@ import br.com.condominio.servico.usuario.application.exception.PersistenciaConfl
 import br.com.condominio.servico.usuario.application.port.in.CadastrarUsuarioUseCase;
 import br.com.condominio.servico.usuario.application.port.out.IdentityGatewayPort;
 import br.com.condominio.servico.usuario.application.port.out.UsuarioRepositoryPort;
+import br.com.condominio.servico.usuario.domain.TipoUsuario;
 import br.com.condominio.servico.usuario.domain.Usuario;
 
 /**
  * Implementa a orquestracao de regras da camada de aplicacao.
  */
 public class CadastrarUsuarioService implements CadastrarUsuarioUseCase {
-
-  private static final String ROLE_USER = "USER";
 
   private final UsuarioRepositoryPort usuarioRepositoryPort;
   private final IdentityGatewayPort identityGatewayPort;
@@ -38,7 +37,7 @@ public class CadastrarUsuarioService implements CadastrarUsuarioUseCase {
     }
 
     IdentityGatewayPort.CriarIdentidadeResult identity = identityGatewayPort.criarUsuario(
-        new IdentityGatewayPort.CriarIdentidadeCommand(usuario.email(), command.senha(), ROLE_USER)
+        new IdentityGatewayPort.CriarIdentidadeCommand(usuario.email(), command.senha(), toIdentityRole(command.tipo()))
     );
 
     usuario.atribuirIdentityId(identity.identityId());
@@ -87,5 +86,12 @@ public class CadastrarUsuarioService implements CadastrarUsuarioUseCase {
         usuario.apartamento(),
         usuario.bloco()
     );
+  }
+
+  private String toIdentityRole(TipoUsuario tipoUsuario) {
+    return switch (tipoUsuario) {
+      case MORADOR -> "MORADOR";
+      case FUNCIONARIO -> "FUNCIONARIO";
+    };
   }
 }

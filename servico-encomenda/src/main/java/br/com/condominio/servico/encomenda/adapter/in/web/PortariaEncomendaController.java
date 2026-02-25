@@ -5,6 +5,7 @@ import br.com.condominio.servico.encomenda.adapter.in.web.dto.BaixarEncomendaRet
 import br.com.condominio.servico.encomenda.adapter.in.web.dto.EncomendaResponse;
 import br.com.condominio.servico.encomenda.adapter.in.web.dto.ReceberEncomendaRequest;
 import br.com.condominio.servico.encomenda.application.port.in.BaixarEncomendaRetiradaUseCase;
+import br.com.condominio.servico.encomenda.application.port.in.BuscarEncomendaPorIdUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.ReceberEncomendaUseCase;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,13 +32,27 @@ public class PortariaEncomendaController {
 
   private final ReceberEncomendaUseCase receberEncomendaUseCase;
   private final BaixarEncomendaRetiradaUseCase baixarEncomendaRetiradaUseCase;
+  private final BuscarEncomendaPorIdUseCase buscarEncomendaPorIdUseCase;
 
   public PortariaEncomendaController(
       ReceberEncomendaUseCase receberEncomendaUseCase,
-      BaixarEncomendaRetiradaUseCase baixarEncomendaRetiradaUseCase
+      BaixarEncomendaRetiradaUseCase baixarEncomendaRetiradaUseCase,
+      BuscarEncomendaPorIdUseCase buscarEncomendaPorIdUseCase
   ) {
     this.receberEncomendaUseCase = receberEncomendaUseCase;
     this.baixarEncomendaRetiradaUseCase = baixarEncomendaRetiradaUseCase;
+    this.buscarEncomendaPorIdUseCase = buscarEncomendaPorIdUseCase;
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<EncomendaResponse> buscarPorId(@PathVariable("id") Long id) {
+    log.info("package query requested for id {}", id);
+
+    BuscarEncomendaPorIdUseCase.Result result = buscarEncomendaPorIdUseCase.executar(
+        new BuscarEncomendaPorIdUseCase.Command(id)
+    );
+
+    return ResponseEntity.ok(toResponse(result));
   }
 
   @PostMapping
@@ -80,6 +96,19 @@ public class PortariaEncomendaController {
   }
 
   private EncomendaResponse toResponse(ReceberEncomendaUseCase.Result result) {
+    return new EncomendaResponse(
+        result.id(),
+        result.nomeDestinatario(),
+        result.apartamento(),
+        result.bloco(),
+        result.descricao(),
+        result.recebidoPor(),
+        result.status(),
+        result.dataRecebimento()
+    );
+  }
+
+  private EncomendaResponse toResponse(BuscarEncomendaPorIdUseCase.Result result) {
     return new EncomendaResponse(
         result.id(),
         result.nomeDestinatario(),

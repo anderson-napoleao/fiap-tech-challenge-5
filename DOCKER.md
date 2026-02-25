@@ -3,6 +3,7 @@
 ## 🏗️ Arquitetura
 
 ### Serviços da Aplicação
+- **frontend** (3000): Interface web React
 - **servico-identidade** (8081): Gestão de identidade e autenticação
 - **servico-usuario** (8082): Gestão de usuários e moradores
 - **servico-encomenda** (8083): Gestão de encomendas
@@ -73,7 +74,10 @@ docker-compose up -d --build servico-usuario
 
 ## 📊 Acesso às Interfaces
 
-### Logs e Monitoramento
+### Aplicação e Interfaces
+- **Frontend**: http://localhost:3000
+  - Interface principal do sistema
+  - Login, cadastro, gestão de encomendas e notificações
 - **Kibana**: http://localhost:5601
   - Index pattern: `condominio-logs-*`
   - Campos disponíveis: service, log_level, trace_id, span_id

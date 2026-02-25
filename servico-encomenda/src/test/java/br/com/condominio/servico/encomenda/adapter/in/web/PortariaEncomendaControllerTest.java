@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import br.com.condominio.servico.encomenda.application.exception.EncomendaNaoEncontradaException;
 import br.com.condominio.servico.encomenda.application.port.in.BaixarEncomendaRetiradaUseCase;
+import br.com.condominio.servico.encomenda.application.port.in.BuscarEncomendaPorIdUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.ReceberEncomendaUseCase;
 import br.com.condominio.servico.encomenda.domain.StatusEncomenda;
 import br.com.condominio.servico.encomenda.infrastructure.security.SecurityConfig;
@@ -41,6 +42,9 @@ class PortariaEncomendaControllerTest {
 
   @MockBean
   private BaixarEncomendaRetiradaUseCase baixarEncomendaRetiradaUseCase;
+
+  @MockBean
+  private BuscarEncomendaPorIdUseCase buscarEncomendaPorIdUseCase;
 
   @Test
   void deveRetornar401SemToken() throws Exception {
