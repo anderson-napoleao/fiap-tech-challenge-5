@@ -34,6 +34,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers("/actuator/health").permitAll()
             .requestMatchers(HttpMethod.POST, "/portaria/encomendas").hasAuthority("ROLE_FUNCIONARIO")
+            .requestMatchers(HttpMethod.POST, "/portaria/encomendas/*/retirada").hasAuthority("ROLE_FUNCIONARIO")
             .anyRequest().authenticated()
         )
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

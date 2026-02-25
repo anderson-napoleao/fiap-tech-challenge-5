@@ -13,6 +13,7 @@ public class Encomenda {
   private final Instant dataRecebimento;
   private StatusEncomenda status;
   private Instant dataRetirada;
+  private String retiradoPorNome;
 
   private Encomenda(
       String nomeDestinatario,
@@ -42,8 +43,9 @@ public class Encomenda {
     return new Encomenda(nomeDestinatario, apartamento, bloco, descricao, recebidoPor, dataRecebimento);
   }
 
-  public void marcarRetirada(Instant dataRetirada) {
+  public void marcarRetirada(Instant dataRetirada, String retiradoPorNome) {
     validarInstante(dataRetirada, "Data de retirada obrigatoria");
+    validarObrigatorio(retiradoPorNome, "Nome de quem retirou obrigatorio");
 
     if (status != StatusEncomenda.RECEBIDA) {
       throw new IllegalStateException("Somente encomenda RECEBIDA pode ser retirada");
@@ -55,6 +57,7 @@ public class Encomenda {
 
     this.status = StatusEncomenda.RETIRADA;
     this.dataRetirada = dataRetirada;
+    this.retiradoPorNome = retiradoPorNome;
   }
 
   public Encomenda atribuirId(Long id) {
@@ -99,6 +102,10 @@ public class Encomenda {
 
   public Instant dataRetirada() {
     return dataRetirada;
+  }
+
+  public String retiradoPorNome() {
+    return retiradoPorNome;
   }
 
   private static String validarObrigatorio(String valor, String mensagem) {

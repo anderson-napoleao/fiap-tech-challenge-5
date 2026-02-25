@@ -1,5 +1,6 @@
 package br.com.condominio.servico.encomenda.infrastructure.web.error;
 
+import br.com.condominio.servico.encomenda.application.exception.EncomendaNaoEncontradaException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,22 @@ public class GlobalExceptionHandler {
       HttpServletRequest request
   ) {
     return buildResponse(HttpStatus.BAD_REQUEST, "Dados invalidos", request.getRequestURI());
+  }
+
+  @ExceptionHandler(EncomendaNaoEncontradaException.class)
+  public ResponseEntity<ErrorResponse> handleNotFound(
+      EncomendaNaoEncontradaException exception,
+      HttpServletRequest request
+  ) {
+    return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<ErrorResponse> handleConflict(
+      IllegalStateException exception,
+      HttpServletRequest request
+  ) {
+    return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI());
   }
 
   @ExceptionHandler(Exception.class)

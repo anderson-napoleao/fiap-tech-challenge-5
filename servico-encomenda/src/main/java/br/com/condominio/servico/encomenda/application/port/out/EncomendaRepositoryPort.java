@@ -1,0 +1,11 @@
+package br.com.condominio.servico.encomenda.application.port.out;
+
+import br.com.condominio.servico.encomenda.domain.Encomenda;
+import java.util.Optional;
+
+public interface EncomendaRepositoryPort {
+
+  Optional<Encomenda> buscarPorId(Long id);
+
+  Encomenda salvar(Encomenda encomenda);
+}

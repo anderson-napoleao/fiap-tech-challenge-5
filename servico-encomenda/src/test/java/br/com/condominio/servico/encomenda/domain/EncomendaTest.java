@@ -19,10 +19,11 @@ class EncomendaTest {
         Instant.parse("2026-02-21T18:00:00Z")
     );
 
-    encomenda.marcarRetirada(Instant.parse("2026-02-21T18:10:00Z"));
+    encomenda.marcarRetirada(Instant.parse("2026-02-21T18:10:00Z"), "Maria");
 
     assertEquals(StatusEncomenda.RETIRADA, encomenda.status());
     assertEquals(Instant.parse("2026-02-21T18:10:00Z"), encomenda.dataRetirada());
+    assertEquals("Maria", encomenda.retiradoPorNome());
   }
 
   @Test
@@ -38,7 +39,7 @@ class EncomendaTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> encomenda.marcarRetirada(Instant.parse("2026-02-21T17:59:59Z"))
+        () -> encomenda.marcarRetirada(Instant.parse("2026-02-21T17:59:59Z"), "Maria")
     );
   }
 
@@ -52,11 +53,28 @@ class EncomendaTest {
         "porteiro-1",
         Instant.parse("2026-02-21T18:00:00Z")
     );
-    encomenda.marcarRetirada(Instant.parse("2026-02-21T18:10:00Z"));
+    encomenda.marcarRetirada(Instant.parse("2026-02-21T18:10:00Z"), "Maria");
 
     assertThrows(
         IllegalStateException.class,
-        () -> encomenda.marcarRetirada(Instant.parse("2026-02-21T18:20:00Z"))
+        () -> encomenda.marcarRetirada(Instant.parse("2026-02-21T18:20:00Z"), "Maria")
+    );
+  }
+
+  @Test
+  void naoDevePermitirRetiradaSemNomeDeQuemRetirou() {
+    Encomenda encomenda = Encomenda.receber(
+        "Maria",
+        "101",
+        "A",
+        "Caixa pequena",
+        "porteiro-1",
+        Instant.parse("2026-02-21T18:00:00Z")
+    );
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> encomenda.marcarRetirada(Instant.parse("2026-02-21T18:10:00Z"), " ")
     );
   }
 }

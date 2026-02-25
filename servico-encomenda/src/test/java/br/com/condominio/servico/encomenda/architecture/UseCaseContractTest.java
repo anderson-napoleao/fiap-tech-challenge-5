@@ -2,6 +2,7 @@ package br.com.condominio.servico.encomenda.architecture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import br.com.condominio.servico.encomenda.application.port.in.BaixarEncomendaRetiradaUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.ReceberEncomendaUseCase;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ class UseCaseContractTest {
 
   @Test
   void useCasesDevemReceberApenasCommandComoEntrada() {
+    validarMetodoDeEntrada(BaixarEncomendaRetiradaUseCase.class);
     validarMetodoDeEntrada(ReceberEncomendaUseCase.class);
   }
 

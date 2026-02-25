@@ -43,4 +43,27 @@ class UseCaseCommandValidationTest {
         )
     );
   }
+
+  @Test
+  void baixarEncomendaRetiradaCommandDeveValidarCamposObrigatorios() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new BaixarEncomendaRetiradaUseCase.Command(null, "Maria")
+    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new BaixarEncomendaRetiradaUseCase.Command(0L, "Maria")
+    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new BaixarEncomendaRetiradaUseCase.Command(1L, " ")
+    );
+  }
+
+  @Test
+  void baixarEncomendaRetiradaCommandDeveAceitarPayloadValido() {
+    assertDoesNotThrow(
+        () -> new BaixarEncomendaRetiradaUseCase.Command(1L, "Maria")
+    );
+  }
 }

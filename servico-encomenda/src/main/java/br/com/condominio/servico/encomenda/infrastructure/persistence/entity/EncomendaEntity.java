@@ -44,6 +44,9 @@ public class EncomendaEntity {
   @Column(name = "data_retirada")
   private Instant dataRetirada;
 
+  @Column(name = "retirado_por_nome", length = 150)
+  private String retiradoPorNome;
+
   public Long getId() {
     return id;
   }
@@ -114,5 +117,13 @@ public class EncomendaEntity {
 
   public void setDataRetirada(Instant dataRetirada) {
     this.dataRetirada = dataRetirada;
+  }
+
+  public String getRetiradoPorNome() {
+    return retiradoPorNome;
+  }
+
+  public void setRetiradoPorNome(String retiradoPorNome) {
+    this.retiradoPorNome = retiradoPorNome;
   }
 }

@@ -86,6 +86,7 @@ public class RegistrarRecebimentoComOutboxAdapter implements RegistrarRecebiment
     entity.setStatus(encomenda.status());
     entity.setDataRecebimento(encomenda.dataRecebimento());
     entity.setDataRetirada(encomenda.dataRetirada());
+    entity.setRetiradoPorNome(encomenda.retiradoPorNome());
     return entity;
   }
 
@@ -101,7 +102,7 @@ public class RegistrarRecebimentoComOutboxAdapter implements RegistrarRecebiment
 
     if (entity.getStatus() == StatusEncomenda.RETIRADA) {
       Instant dataRetirada = entity.getDataRetirada();
-      encomenda.marcarRetirada(dataRetirada);
+      encomenda.marcarRetirada(dataRetirada, entity.getRetiradoPorNome());
     }
 
     return encomenda;
