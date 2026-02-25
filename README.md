@@ -1,211 +1,686 @@
-﻿# Sistema Condomínio
+# Sistema Condominio - Tech Challenge
 
-Plataforma de gestão condominial baseada em microserviços, com foco em arquitetura limpa, rastreabilidade e qualidade de software.
+Plataforma distribuida para gestao condominial, estruturada em microservicos com Clean Architecture, mensageria orientada a eventos e observabilidade centralizada.
 
-## Como executar e usar
+Este documento explica o desenho da solucao, as decisoes de engenharia, a operacao via Docker, os testes e um roteiro de demonstracao ponta a ponta.
 
-### Pré-requisitos por cenário
+## 1. Objetivo do Projeto
 
-#### 1. Rodar somente com Docker (recomendado para uso)
+Este sistema foi concebido para resolver um problema operacional real de condominio:
 
-- Docker Desktop (ou Docker Engine com Docker Compose)
+- controlar cadastro de usuarios (moradores e funcionarios);
+- registrar recebimento e retirada de encomendas;
+- gerar notificacoes para o morador de forma assincrona;
+- manter rastreabilidade da operacao com logs estruturados.
 
-📌 Nesse cenário, **Java e Maven no host não são obrigatórios**.
+Do ponto de vista de engenharia, o foco do projeto e demonstrar:
 
-#### 2. Desenvolver localmente e rodar testes com Maven
+- separacao de responsabilidades por dominio;
+- evolucao segura com arquitetura limpa;
+- consistencia entre banco e evento com Outbox + CDC;
+- observabilidade realista para ambiente distribuido;
+- estrategia de testes em camadas.
+
+## 2. Arquitetura Geral
+
+Arquitetura em microservicos, com responsabilidades bem delimitadas:
+
+- `servico-identidade`: autenticacao e emissao de JWT.
+- `servico-usuario`: cadastro e manutencao de perfil.
+- `servico-encomenda`: ciclo operacional de encomenda (recebimento e retirada).
+- `servico-notificacao`: processamento de eventos e notificacao ao morador.
+- `frontend`: interface web para os fluxos funcionais.
+
+Elementos de suporte:
+
+- PostgreSQL separado por servico (isolamento de contexto e de schema).
+- Kafka + Kafka Connect + Debezium para CDC de eventos de outbox.
+- ELK + Filebeat para centralizacao e analise de logs.
+
+Em termos praticos: cada servico cuida do seu proprio estado, e a integracao entre contextos e feita por API e eventos, evitando acoplamento direto de banco.
+
+### 2.1 Decisoes arquiteturais (e o motivo)
+
+1. Separacao em microservicos por contexto de negocio
+- `servico-identidade`, `servico-usuario`, `servico-encomenda` e `servico-notificacao` evoluem com baixo acoplamento.
+- Cada contexto tem API e banco proprios, reduzindo impacto de mudancas locais em outros modulos.
+
+2. Clean Architecture aplicada dentro de cada servico
+- `domain`: regras de negocio puras, sem framework.
+- `application`: casos de uso e portas (entrada/saida), sem Spring.
+- `adapter`/`infrastructure`: detalhes tecnicos (HTTP, JPA, Kafka, seguranca, serializacao).
+- Regras arquiteturais sao protegidas por testes ArchUnit em cada modulo.
+
+3. Integracao entre contextos por API e eventos
+- Chamadas HTTP cobrem fluxos sincronos (ex.: autenticacao e consulta de perfil).
+- Eventos cobrem fluxos assincronos e desacoplam tempo de resposta entre servicos.
+
+4. Consistencia entre estado e evento com Outbox + CDC
+- Nos servicos que publicam eventos, estado de negocio e `outbox_event` sao persistidos na mesma transacao local.
+- Debezium le o `outbox_event` no Postgres e publica no Kafka sem dual-write na aplicacao.
+
+5. Observabilidade como parte da arquitetura
+- Logs estruturados, tracing e stack ELK permitem diagnostico distribuido sem depender de logs locais isolados.
+
+### 2.2 Versionamento de banco com Flyway
+
+Padrao adotado no projeto:
+
+- Flyway habilitado em todos os servicos (`spring.flyway.enabled=true`).
+- Scripts versionados em `src/main/resources/db/migration`.
+- Convencao de nomes: `V{numero}__{descricao}.sql`.
+- Evolucao de schema controlada por migracoes; o JPA nao e usado para gerar schema em runtime.
+
+Inventario atual de migracoes:
+
+| Servico | Migracoes |
+| --- | --- |
+| `servico-identidade` | `V1__init_schema.sql` |
+| `servico-usuario` | `V1__init_schema.sql` |
+| `servico-encomenda` | `V1__init_schema.sql`, `V2__add_idx_encomendas_bloco_apto_data.sql` |
+| `servico-notificacao` | `V1__init_schema.sql` |
+
+Relacao com o modelo de integracao:
+
+- `servico-encomenda` e `servico-notificacao` criam tabelas de negocio e `outbox_event` via migracao.
+- Isso garante que o contrato de persistencia exigido pelo pipeline Debezium/Kafka esteja versionado junto com o codigo.
+
+Como evoluir o banco com seguranca:
+
+1. Criar um novo arquivo `V{proxima_versao}__{descricao}.sql` no servico dono do schema.
+2. Nunca editar migracoes ja aplicadas em ambiente compartilhado; sempre criar nova versao.
+3. Subir o servico (local, Docker ou testes) para Flyway aplicar a nova versao automaticamente.
+4. Manter entidades JPA aderentes ao schema versionado (sem depender de auto-DDL).
+
+## 3. Servicos da Aplicacao (Detalhamento)
+
+### 3.1 servico-identidade (porta 8081)
+
+Responsabilidade central:
+
+- autenticar credenciais;
+- emitir token JWT;
+- administrar identidades e papeis.
+
+Por que existe:
+
+- desacoplar autenticacao da regra de negocio dos demais servicos;
+- centralizar politica de acesso e identidade.
+
+Principais endpoints:
+
+- `POST /auth/token`
+- `POST /admin/users`
+- `PATCH /admin/users/{id}/disable`
+- `DELETE /admin/users/{id}`
+
+Persistencia:
+
+- banco `condominio_identidade` (container `postgres-identidade`).
+
+---
+
+### 3.2 servico-usuario (porta 8082)
+
+Responsabilidade central:
+
+- cadastrar usuario/morador;
+- expor e atualizar perfil autenticado.
+
+Por que existe:
+
+- concentrar o contexto de dados cadastrais;
+- permitir evolucao independente de regra de perfil sem impactar autenticacao.
+
+Principais endpoints:
+
+- `POST /users`
+- `GET /users/me`
+- `PUT /users/me`
+
+Persistencia:
+
+- banco `condominio_usuario` (container `postgres-usuario`).
+
+Dependencia funcional:
+
+- integra com `servico-identidade` para fluxo de identidade/credencial.
+
+---
+
+### 3.3 servico-encomenda (porta 8083)
+
+Responsabilidade central:
+
+- registrar recebimento de encomenda;
+- registrar retirada;
+- gerar evento de dominio (outbox) para processamento assincrono.
+
+Por que existe:
+
+- encapsular regra operacional da portaria;
+- garantir auditabilidade do ciclo da encomenda.
+
+Principais endpoints:
+
+- `GET /portaria/encomendas`
+- `GET /portaria/encomendas/{id}`
+- `POST /portaria/encomendas`
+- `POST /portaria/encomendas/{id}/retirada`
+
+Persistencia:
+
+- banco `condominio_encomenda` (container `postgres-encomenda`);
+- tabela de negocio `encomendas`;
+- tabela de integracao `outbox_event`.
+
+---
+
+### 3.4 servico-notificacao (porta 8084 no Docker)
+
+Responsabilidade central:
+
+- consumir eventos de encomenda;
+- criar e disponibilizar notificacoes para morador;
+- registrar confirmacao de leitura/recebimento.
+
+Por que existe:
+
+- separar processamento assincrono do fluxo transacional da portaria;
+- reduzir acoplamento temporal entre receber encomenda e notificar morador.
+
+Principais endpoints:
+
+- `GET /morador/notificacoes`
+- `POST /morador/notificacoes/{id}/confirmacao`
+
+Persistencia:
+
+- banco `condominio_notificacao` (container `postgres-notificacao`);
+- tabela de negocio `notificacoes`;
+- tabela `outbox_event` para padrao de integracao.
+
+Topico principal consumido:
+
+- `encomenda.recebida`.
+
+---
+
+### 3.5 frontend (porta 3000)
+
+Responsabilidade central:
+
+- oferecer interface unificada para morador e funcionario;
+- conduzir os fluxos funcionais com autenticacao JWT;
+- facilitar a demonstracao operacional ponta a ponta.
+
+Por que existe:
+
+- transformar APIs tecnicas em experiencia de uso orientada a processo;
+- permitir validacao funcional ponta a ponta.
+
+Tecnologia:
+
+- React + TypeScript + Vite.
+
+## 4. Diretorios-Chave e Justificativa
+
+### `frontend/`
+
+Para que serve:
+
+- codigo da SPA web (telas, componentes e clientes HTTP).
+
+Por que existe:
+
+- desacopla experiencia de usuario do backend;
+- permite evolucao independente da interface.
+
+---
+
+### `infra/`
+
+Para que serve:
+
+- arquivos de infraestrutura de integracao (principalmente Debezium/Kafka Connect).
+
+Por que existe:
+
+- versionar infraestrutura como codigo;
+- padronizar setup de CDC entre ambientes.
+
+Exemplo:
+
+- `infra/debezium/encomenda-outbox-connector.config.json`
+- `infra/debezium/notificacao-outbox-connector.config.json`
+
+---
+
+### `docs/`
+
+Para que serve:
+
+- contratos OpenAPI e artefatos de documentacao tecnica.
+
+Por que existe:
+
+- garantir transparencia de contrato e rastreabilidade tecnica para evolucao.
+
+---
+
+### `tests-integracao-sistema/`
+
+Para que serve:
+
+- testes cross-module (comportamento entre servicos reais).
+
+Por que existe:
+
+- validar fluxos de negocio acima da unidade de modulo;
+- reduzir risco de integracao em producao.
+
+---
+
+### `elk/`
+
+Para que serve:
+
+- pipeline de logs (Filebeat -> Logstash -> Elasticsearch).
+
+Por que existe:
+
+- dar suporte a diagnostico operacional em ambiente distribuido;
+- manter trilha de auditoria e investigacao.
+
+## 5. Tecnologias e Ferramentas Utilizadas
+
+Esta secao consolida as tecnologias do projeto por responsabilidade tecnica.
+
+### 5.1 Backend e API
 
 - Java 21
-- Maven 3.9+
-- Docker funcional (necessário para Testcontainers e stack de apoio)
+- Spring Boot (camada web e bootstrapping)
+- Spring Security Resource Server (autenticacao/autorizacao com JWT)
+- Spring Data JPA (persistencia relacional)
+- OpenAPI/Swagger (contratos e exploracao de API)
 
-### Subir aplicação completa
+### 5.2 Persistencia e evolucao de schema
 
-No diretório raiz:
+- PostgreSQL com banco isolado por servico
+- Flyway para versionamento de schema por modulo
+- Modelagem de tabelas de negocio + `outbox_event` nos servicos orientados a evento
+
+### 5.3 Mensageria e integracao assincrona
+
+- Apache Kafka (broker de eventos)
+- Kafka Connect (runtime de conectores)
+- Debezium (CDC a partir do outbox)
+
+### 5.4 Frontend
+
+- React
+- TypeScript
+- Vite
+
+### 5.5 Observabilidade e operacao
+
+- Micrometer Tracing
+- Logs estruturados em JSON
+- Filebeat, Logstash, Elasticsearch e Kibana (stack ELK)
+
+### 5.6 Build, execucao e apoio
+
+- Maven multi-modulo
+- Docker Compose
+- Adminer (inspecao de dados)
+- Kafka UI (inspecao de topicos e mensagens)
+
+### 5.7 Qualidade de software
+
+- JUnit 5
+- ArchUnit (regras arquiteturais)
+- Testcontainers (testes com infraestrutura real)
+- RestAssured (testes de API no modulo cross-module)
+- Checkstyle, PMD, SpotBugs, JaCoCo e OWASP Dependency-Check
+
+## 6. Desafios Tecnicos Enfrentados e Solucoes Adotadas
+
+### 6.1 Preservar fronteiras da Clean Architecture no dia a dia
+
+Desafio:
+- impedir acoplamento acidental de `domain` e `application` com frameworks e adaptadores.
+
+Solucao adotada:
+- estrutura em camadas (`domain`, `application`, `adapter/infrastructure`) com dependencias apontando para o nucleo.
+- testes ArchUnit em todos os servicos para bloquear dependencias proibidas.
+
+Impacto:
+- regras de negocio permanecem testaveis e portaveis, com menor custo de mudanca tecnologica.
+
+### 6.2 Garantir consistencia entre estado de negocio e publicacao de evento
+
+Desafio:
+- evitar dual-write (salvar no banco e publicar no broker em passos independentes), que gera inconsistencias em falhas parciais.
+
+Solucao adotada:
+- padrao Outbox: persistencia de estado de negocio e `outbox_event` na mesma transacao local.
+- Debezium + Kafka Connect para publicar eventos a partir do banco via CDC.
+
+Impacto:
+- maior confiabilidade de integracao assincrona sem usar transacao distribuida.
+
+### 6.3 Evoluir schema de banco com seguranca entre ambientes
+
+Desafio:
+- manter alinhamento entre entidades, DDL e ambientes (local, Docker e testes) sem drift de schema.
+
+Solucao adotada:
+- Flyway habilitado em todos os servicos.
+- migracoes versionadas em `db/migration`, com historico rastreavel por modulo.
+- JPA configurado sem geracao automatica de DDL em runtime.
+
+Impacto:
+- evolucao previsivel de banco, com rollback estrategico por nova migracao e melhor reprodutibilidade.
+
+### 6.4 Validar qualidade alem do teste unitario
+
+Desafio:
+- reduzir risco de regressao arquitetural, funcional e nao-funcional em um monorepo com varios servicos.
+
+Solucao adotada:
+- estrategia em camadas: testes unitarios/aplicacao, testes web, testes arquiteturais e testes cross-module com Testcontainers.
+- quality gate com Checkstyle, PMD, SpotBugs, JaCoCo e OWASP Dependency-Check.
+
+Impacto:
+- aumento de confiabilidade evolutiva e deteccao precoce de problemas tecnicos.
+
+### 6.5 Manter diagnostico operacional em ambiente distribuido
+
+Desafio:
+- investigar falhas e correlacionar eventos entre servicos distintos.
+
+Solucao adotada:
+- logs estruturados com metadados de rastreio.
+- centralizacao em ELK para busca e analise temporal unificada.
+
+Impacto:
+- troubleshooting mais rapido e melhor rastreabilidade de ponta a ponta.
+
+## 7. Como Rodar o Sistema com Docker
+
+### 7.1 Pre-requisitos
+
+- Docker Desktop (ou Docker Engine + Docker Compose).
+
+### 7.2 Subida completa
+
+No diretorio raiz:
 
 ```bash
 docker compose up -d --build
 ```
 
-O serviço `cdc-init` registra automaticamente os connectors Debezium no Kafka Connect.
-
-Para conferir:
+Conferir status:
 
 ```bash
-docker compose logs -f cdc-init
+docker compose ps
 ```
 
-### Acessos principais
+### 7.3 Enderecos principais
 
 - Frontend: `http://localhost:3000`
-- Serviço Identidade: `http://localhost:8081`
-- Serviço Usuário: `http://localhost:8082`
-- Serviço Encomenda: `http://localhost:8083`
-- Serviço Notificação: `http://localhost:8084` (Docker)
+- Identidade: `http://localhost:8081`
+- Usuario: `http://localhost:8082`
+- Encomenda: `http://localhost:8083`
+- Notificacao: `http://localhost:8084`
+- Kibana: `http://localhost:5601`
+- Kafka UI: `http://localhost:8086`
+- Adminer: `http://localhost:8087`
+- Portal de docs: `http://localhost:8090`
 
-### OpenAPI e Swagger
+### 7.4 Servicos Docker e por que cada um existe
 
-- Identidade: `http://localhost:8081/swagger-ui/index.html`
-- Usuário: `http://localhost:8082/swagger-ui/index.html`
-- Encomenda: `http://localhost:8083/swagger-ui/index.html`
-- Notificação: `http://localhost:8084/swagger-ui/index.html` (Docker) / `8087` (profile local)
+#### Aplicacao
 
-### JavaDoc e Docker Docs
+- `frontend`: interface de demonstracao e operacao.
+- `servico-identidade`: identidade e JWT.
+- `servico-usuario`: cadastro e perfil.
+- `servico-encomenda`: fluxo de encomendas e outbox.
+- `servico-notificacao`: notificacoes assincronas ao morador.
 
-- Portal de documentação técnica: `http://localhost:8090`
-- JavaDoc Identidade: `http://localhost:8090/javadocs/servico-identidade/index.html`
-- JavaDoc Usuário: `http://localhost:8090/javadocs/servico-usuario/index.html`
-- JavaDoc Encomenda: `http://localhost:8090/javadocs/servico-encomenda/index.html`
-- JavaDoc Notificação: `http://localhost:8090/javadocs/servico-notificacao/index.html`
-- Guia Docker: `http://localhost:8090/DOCKER.md`
+#### Dados
 
-### Fluxo básico de uso
+- `postgres-identidade`: banco exclusivo de identidade.
+- `postgres-usuario`: banco exclusivo de usuarios.
+- `postgres-encomenda`: banco exclusivo de encomendas.
+- `postgres-notificacao`: banco exclusivo de notificacoes.
 
-1. Criar usuário no frontend (morador).
-2. Fazer login para obter token JWT.
-3. Registrar recebimento e retirada de encomendas com perfil de funcionário.
-4. Consultar e confirmar notificações pendentes com perfil de morador.
+Motivacao: isolamento por contexto de negocio e menor acoplamento de schema.
 
-## Como rodar todos os testes
+#### Mensageria e CDC
 
-Pré-requisitos para testes:
+- `zookeeper`: coordenacao do cluster Kafka.
+- `kafka`: broker de eventos.
+- `kafka-connect`: runtime de conectores Debezium.
+- `cdc-init`: bootstrap automatico de conectores no startup.
 
-- `mvn test` e `mvn -Pquality ...`: Java 21 + Maven 3.9+
-- testes com Testcontainers: Java 21 + Maven 3.9+ + Docker funcional
+Motivacao: implementar integracao orientada a eventos sem polling manual.
 
-### Suite padrão (unitários + web + arquitetura)
+#### Observabilidade
+
+- `filebeat`: coleta logs de containers.
+- `logstash`: tratamento e normalizacao de logs.
+- `elasticsearch`: indexacao e busca.
+- `kibana`: visualizacao e investigacao.
+
+Motivacao: suporte real de operacao e troubleshooting distribuido.
+
+#### Ferramentas de apoio
+
+- `adminer`: inspecao SQL simplificada.
+- `kafka-ui`: visualizacao de topicos, mensagens e connectors.
+- `docs-site`: entrega de documentacao e JavaDoc.
+
+## 8. Como Rodar os Testes (Detalhado)
+
+### 8.1 Estrategia de testes
+
+O projeto adota validacao em camadas:
+
+- testes unitarios e de aplicacao por modulo;
+- testes web/controllers;
+- testes de arquitetura (ArchUnit);
+- testes cross-module com Testcontainers;
+- quality gate estatico.
+
+### 8.2 Suite padrao do monorepo
+
+Executa testes dos modulos Maven:
 
 ```bash
 mvn test
 ```
 
-### Testes integrados com Testcontainers
+Quando usar:
+
+- verificacao rapida de regressao funcional local.
+
+### 8.3 Testes com Testcontainers
+
+Ativa cenarios que sobem infraestrutura temporaria:
 
 ```bash
 mvn test -Dtestcontainers.enabled=true
 ```
 
-### Apenas teste integrado cross-module
+Quando usar:
+
+- validacao mais proxima de producao (banco/container real).
+
+### 8.4 Cross-module (foco em integracao de sistema)
 
 ```bash
 mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoCadastroUsuarioCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-### Qualidade estática (quality gate)
+O que esse teste valida:
+
+- cadastro em `servico-usuario`;
+- autenticacao em `servico-identidade`;
+- consulta autenticada de perfil em `servico-usuario`.
+
+### 8.5 Quality gate
 
 ```bash
 mvn -Pquality verify
 ```
 
-Execução local mais rápida (sem OWASP):
+Inclui:
+
+- Checkstyle;
+- PMD;
+- SpotBugs;
+- JaCoCo;
+- OWASP Dependency-Check.
+
+Execucao mais rapida (sem varredura OWASP):
 
 ```bash
 mvn -Pquality -DskipTests -Ddependency-check.skip=true verify
 ```
 
-## Relatório técnico do sistema
+## 9. Roteiro de Teste Funcional pelo Frontend
 
-## Visão geral
+Este roteiro foi pensado para execucao ponta a ponta, com inicio, meio e fim claros.
 
-O sistema implementa uma arquitetura distribuída orientada a serviços para suporte às operações de portaria e relacionamento com moradores.
+### 9.1 Cenario Morador
 
-- `servico-identidade`: serviço responsável por autenticação, autorização e emissão de tokens JWT utilizados pelos demais módulos.
-- `servico-usuario`: serviço responsável pelo ciclo de vida cadastral do usuário, incluindo dados pessoais e dados residenciais.
-- `servico-encomenda`: serviço responsável pelo registro de recebimento e baixa de retirada de encomendas, com regras de domínio da portaria.
-- `servico-notificacao`: serviço responsável pela geração, persistência e confirmação de notificações associadas a eventos de encomenda.
-- `frontend`: camada de apresentação web para execução dos fluxos operacionais por funcionário e morador.
-- `tests-integracao-sistema`: módulo dedicado à validação de comportamento integrado entre serviços, banco de dados e contratos de API.
+1. Abrir `http://localhost:3000`.
+2. Entrar em cadastro (`/cadastro`).
+3. Criar conta com tipo `MORADOR`.
+4. Fazer login.
+5. No dashboard, acessar `Notificacoes`.
+6. Confirmar notificacoes pendentes (se houver).
 
-## Modelo arquitetônico
+### 9.2 Cenario Funcionario
 
-O backend adota Clean Architecture como modelo de organização estrutural e de governança de dependências.
+1. Criar conta do tipo `FUNCIONARIO` (via frontend) ou usar conta previamente provisionada.
+2. Fazer login como funcionario.
+3. Acessar `Receber Encomenda` e registrar nova encomenda.
+4. Acessar `Retirar Encomenda` e registrar retirada.
 
-- `domain`: concentra entidades e regras de negócio centrais, sem dependência de frameworks ou infraestrutura.
-- `application`: concentra casos de uso e contratos (portas), coordenando o domínio sem acoplamento a detalhes tecnológicos.
-- `adapter` e `infrastructure`: implementam mecanismos de entrada e saída (HTTP, persistência, segurança, mensageria e observabilidade).
+### 9.3 Evidencia de fluxo integrado
 
-As dependências são orientadas para o núcleo, de modo que decisões de framework, banco ou transporte possam evoluir sem comprometer a lógica de negócio.
+Ao registrar recebimento:
 
-## Tecnologias e ferramentas
+- `servico-encomenda` persiste `encomendas` + `outbox_event`;
+- Debezium publica evento em Kafka (`encomenda.recebida`);
+- `servico-notificacao` processa evento e persiste notificacao;
+- morador visualiza e confirma notificacao no frontend.
 
-### Backend e APIs
+## 10. Como Visualizar Logs no Kibana
 
-- Java 21
-- Spring Boot 3.3
-- Spring Security + Resource Server
-- Spring Data JPA
-- PostgreSQL
-- Flyway
-- OpenAPI/Swagger (springdoc)
+### 10.1 Acesso
 
-### Frontend
+- Abrir `http://localhost:5601`.
 
-- React 18
-- TypeScript
-- Vite
-- React Router
-- React Query
-- React Hook Form
-- Axios
-- Tailwind CSS
-- Nginx (entrega da SPA em container)
+### 10.2 Descoberta de logs
 
-### Mensageria e observabilidade
+1. Ir em `Discover`.
+2. Selecionar o indice `condominio-logs-*`.
+3. Filtrar por servico:
+   - `service.name : "servico-identidade"`
+   - `service.name : "servico-encomenda"`
+   - `service.name : "servico-notificacao"`
+4. Ajustar janela temporal para `Last 15 minutes` ou `Last 1 hour`.
 
-- Kafka + Kafka Connect + Debezium (CDC/outbox)
-- Micrometer Tracing
-- Logback JSON (logs estruturados)
-- ELK (Elasticsearch, Logstash, Kibana) + Filebeat
+### 10.3 O que observar
 
-### Build e execução
+- `@timestamp`
+- `service.name`
+- `message`
+- `log_level`
+- `trace_id` e `span_id` (quando presentes)
 
-- Maven multi-módulo
-- Docker Compose
+## 11. Como Verificar Dados no Banco (Adminer e SQL)
 
-### Qualidade e testes
+### 11.1 Via Adminer
 
-- JUnit 5
-- ArchUnit
-- Testcontainers
-- RestAssured (cross-module)
-- Checkstyle
-- PMD
-- SpotBugs
-- JaCoCo
-- OWASP Dependency-Check
+1. Abrir `http://localhost:8087`.
+2. Escolher `PostgreSQL`.
+3. Informar servidor, usuario e banco:
+   - `postgres-identidade` / `condominio_identidade`
+   - `postgres-usuario` / `condominio_usuario`
+   - `postgres-encomenda` / `condominio_encomenda`
+   - `postgres-notificacao` / `condominio_notificacao`
+4. Usuario/senha padrao: `postgres` / `postgres`.
 
-## Desafios técnicos e soluções adotadas
+### 11.2 Queries uteis para demonstracao
 
-1. Consistência transacional entre estado de negócio e publicação de evento.
-- Problema técnico: evitar divergência entre dados persistidos e mensagens emitidas.
-- Solução adotada: padrão Outbox com CDC (Debezium/Kafka Connect), preservando atomicidade na escrita e entrega assíncrona confiável.
+Identidade:
 
-2. Migração de persistência para cenário aderente a produção.
-- Problema técnico: limitações de banco em memória para validação de comportamento real.
-- Solução adotada: padronização em PostgreSQL com versionamento de esquema via Flyway por serviço.
+```sql
+SELECT id, username, enabled FROM identity_users ORDER BY username;
+```
 
-3. Controle de acesso por papel em fronteiras de API.
-- Problema técnico: garantir segregação funcional entre operações de funcionário e morador.
-- Solução adotada: políticas explícitas com `ROLE_FUNCIONARIO` e `ROLE_MORADOR` nos serviços protegidos por JWT.
+Usuarios:
 
-4. Rastreabilidade e diagnóstico em ambiente distribuído.
-- Problema técnico: correlação de falhas entre múltiplos serviços.
-- Solução adotada: logging estruturado em JSON com `trace_id` e `span_id`, integrado à stack ELK para análise operacional.
+```sql
+SELECT id, nome_completo, email, tipo, apartamento, bloco
+FROM usuarios
+ORDER BY id DESC;
+```
 
-5. Confiabilidade de integração entre módulos.
-- Problema técnico: reduzir falso positivo de testes isolados frente ao comportamento real.
-- Solução adotada: testes integrados com Testcontainers e suíte cross-module para validação ponta a ponta.
+Encomendas:
 
-## Ênfase em qualidade de software
+```sql
+SELECT id, nome_destinatario, apartamento, bloco, status, data_recebimento, data_retirada
+FROM encomendas
+ORDER BY id DESC;
+```
 
-A estratégia de qualidade foi estruturada para combinar correção funcional, aderência arquitetural e mantenabilidade evolutiva.
+Notificacoes:
 
-- Verificação em múltiplos níveis: testes de domínio, aplicação, web e integração.
-- Proteção arquitetural: regras automatizadas com ArchUnit para preservar fronteiras da Clean Architecture.
-- Realismo de execução: uso de Testcontainers para validar persistência e integração em ambiente próximo ao operacional.
-- Governança estática: análise com Checkstyle, PMD, SpotBugs, JaCoCo e OWASP Dependency-Check no profile Maven `quality`.
-- Rastreabilidade técnica: observabilidade com logs estruturados e correlação distribuída para apoiar investigação de defeitos.
+```sql
+SELECT id, encomenda_id, morador_id, status, created_at, confirmed_at
+FROM notificacoes
+ORDER BY created_at DESC;
+```
 
-## Documentação complementar
+## 12. Como Verificar Topicos Kafka
 
+### 12.1 Via Kafka UI
+
+1. Abrir `http://localhost:8086`.
+2. Entrar no cluster `condominio`.
+3. Verificar topicos de negocio:
+   - `encomenda.recebida`
+   - `notificacao.evento`
+4. Abrir o topico e inspecionar payload e timestamp das mensagens.
+
+### 12.2 Validacao de connectors
+
+```bash
+curl http://localhost:8085/connectors
+curl http://localhost:8085/connectors/encomenda-outbox-connector/status
+curl http://localhost:8085/connectors/notificacao-outbox-connector/status
+```
+
+## 13. Documentacao Adicional
+
+- Docker: `DOCKER.md`
 - OpenAPI: `docs/openapi`
-- Operação Docker: `DOCKER.md`
+- JavaDoc (portal): `http://localhost:8090`
+- Readme com estrutura de prints: `README-com-prints.md`
+
+## 14. Encerramento
+
+Em sintese, a solucao atende ao objetivo do Tech Challenge ao combinar:
+
+- modelagem de dominio clara;
+- separacao arquitetural rigorosa;
+- integracao assincrona com resiliencia;
+- observabilidade para diagnostico;
+- testes multicamadas para confiabilidade evolutiva.
+
+Com isso, o projeto nao apenas "funciona", mas tambem apresenta fundamento tecnico para manutencao e evolucao em contexto real.
