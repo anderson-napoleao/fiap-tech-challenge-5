@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { encomendaService } from '@/services/encomendaService'
 import { usuarioService } from '@/services/usuarioService'
 import { Usuario, TipoUsuario } from '@/types'
 import { Package, Bell, User, Home } from 'lucide-react'
@@ -15,6 +16,9 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
+  const [movimentacoesHoje, setMovimentacoesHoje] = useState<number>(0)
+  const [movimentacoesOntem, setMovimentacoesOntem] = useState<number>(0)
+  const [carregandoMovimentacoes, setCarregandoMovimentacoes] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -26,9 +30,13 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
       setLoading(true)
       const dadosUsuario = await usuarioService.getMeuPerfil()
       setUsuario(dadosUsuario)
-      
+
       // Atualizar dados no localStorage
       localStorage.setItem('user_data', JSON.stringify(dadosUsuario))
+
+      if (dadosUsuario.tipo === TipoUsuario.FUNCIONARIO) {
+        await carregarMovimentacoesFuncionario()
+      }
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar dados do usuário')
       if (err.message.includes('Não autorizado')) {
@@ -37,6 +45,43 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const formatarDataLocal = (data: Date) => {
+    const ano = data.getFullYear()
+    const mes = String(data.getMonth() + 1).padStart(2, '0')
+    const dia = String(data.getDate()).padStart(2, '0')
+    return `${ano}-${mes}-${dia}`
+  }
+
+  const carregarMovimentacoesFuncionario = async () => {
+    setCarregandoMovimentacoes(true)
+    try {
+      const hoje = new Date()
+      const ontem = new Date()
+      ontem.setDate(hoje.getDate() - 1)
+
+      const [respostaHoje, respostaOntem] = await Promise.all([
+        encomendaService.listarEncomendas({
+          data: formatarDataLocal(hoje),
+          page: 0,
+          size: 1,
+        }),
+        encomendaService.listarEncomendas({
+          data: formatarDataLocal(ontem),
+          page: 0,
+          size: 1,
+        }),
+      ])
+
+      setMovimentacoesHoje(respostaHoje.totalElements)
+      setMovimentacoesOntem(respostaOntem.totalElements)
+    } catch {
+      setMovimentacoesHoje(0)
+      setMovimentacoesOntem(0)
+    } finally {
+      setCarregandoMovimentacoes(false)
     }
   }
 
@@ -217,16 +262,13 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
                 <div className="space-y-2">
                   <div className="text-sm">
                     <span className="text-gray-500">Hoje:</span>
-                    <span className="ml-2 text-gray-900">5 encomendas recebidas</span>
+                    <span className="ml-2 text-gray-900">{carregandoMovimentacoes ? 'Carregando...' : `${movimentacoesHoje} registros`}</span>
                   </div>
                   <div className="text-sm">
                     <span className="text-gray-500">Ontem:</span>
-                    <span className="ml-2 text-gray-900">3 encomendas retiradas</span>
+                    <span className="ml-2 text-gray-900">{carregandoMovimentacoes ? 'Carregando...' : `${movimentacoesOntem} registros`}</span>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full mt-4" disabled>
-                  Ver Histórico (Em breve)
-                </Button>
               </CardContent>
             </Card>
           </div>

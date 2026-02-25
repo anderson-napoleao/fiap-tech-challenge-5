@@ -3,6 +3,7 @@ package br.com.condominio.servico.encomenda.adapter.in.web;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.condominio.servico.encomenda.application.exception.EncomendaNaoEncontradaException;
 import br.com.condominio.servico.encomenda.application.port.in.BaixarEncomendaRetiradaUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.BuscarEncomendaPorIdUseCase;
+import br.com.condominio.servico.encomenda.application.port.in.ListarEncomendasPortariaUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.ReceberEncomendaUseCase;
 import br.com.condominio.servico.encomenda.domain.StatusEncomenda;
 import br.com.condominio.servico.encomenda.infrastructure.security.SecurityConfig;
@@ -46,6 +48,9 @@ class PortariaEncomendaControllerTest {
   @MockBean
   private BuscarEncomendaPorIdUseCase buscarEncomendaPorIdUseCase;
 
+  @MockBean
+  private ListarEncomendasPortariaUseCase listarEncomendasPortariaUseCase;
+
   @Test
   void deveRetornar401SemToken() throws Exception {
     mockMvc.perform(post("/portaria/encomendas")
@@ -58,6 +63,12 @@ class PortariaEncomendaControllerTest {
                   "descricao": "Caixa pequena"
                 }
                 """))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void deveRetornar401SemTokenNaListagem() throws Exception {
+    mockMvc.perform(get("/portaria/encomendas"))
         .andExpect(status().isUnauthorized());
   }
 
@@ -86,6 +97,13 @@ class PortariaEncomendaControllerTest {
                   "descricao": "Caixa pequena"
                 }
                 """))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void deveRetornar403SemRoleFuncionarioNaListagem() throws Exception {
+    mockMvc.perform(get("/portaria/encomendas")
+            .with(jwt().jwt(jwt -> jwt.subject("porteiro-1").claim("roles", List.of("ROLE_USER")))))
         .andExpect(status().isForbidden());
   }
 
@@ -133,6 +151,48 @@ class PortariaEncomendaControllerTest {
         .andExpect(jsonPath("$.id").value(1))
         .andExpect(jsonPath("$.status").value("RECEBIDA"))
         .andExpect(jsonPath("$.recebidoPor").value("porteiro-1"));
+  }
+
+  @Test
+  void deveListarEncomendasComRoleFuncionarioEComFiltros() throws Exception {
+    when(listarEncomendasPortariaUseCase.executar(any()))
+        .thenReturn(new ListarEncomendasPortariaUseCase.Result(
+            List.of(new ListarEncomendasPortariaUseCase.Item(
+                1L,
+                "Maria",
+                "101",
+                "A",
+                "Caixa pequena",
+                "porteiro-1",
+                StatusEncomenda.RECEBIDA,
+                Instant.parse("2026-02-25T18:00:00Z"),
+                null,
+                null
+            )),
+            0,
+            10,
+            1,
+            1
+        ));
+
+    mockMvc.perform(get("/portaria/encomendas")
+            .queryParam("apartamento", "101")
+            .queryParam("bloco", "A")
+            .queryParam("data", "2026-02-25")
+            .queryParam("page", "0")
+            .queryParam("size", "10")
+            .with(jwt()
+                .jwt(jwt -> jwt.subject("porteiro-1").claim("roles", List.of("ROLE_FUNCIONARIO")))
+                .authorities(new SimpleGrantedAuthority("ROLE_FUNCIONARIO"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.page").value(0))
+        .andExpect(jsonPath("$.size").value(10))
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.totalPages").value(1))
+        .andExpect(jsonPath("$.encomendas[0].id").value(1))
+        .andExpect(jsonPath("$.encomendas[0].apartamento").value("101"))
+        .andExpect(jsonPath("$.encomendas[0].bloco").value("A"))
+        .andExpect(jsonPath("$.encomendas[0].status").value("RECEBIDA"));
   }
 
   @Test

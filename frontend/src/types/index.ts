@@ -65,6 +65,8 @@ export interface Encomenda extends BaseEntity {
   recebidoPor?: string
   status: StatusEncomenda
   dataRecebimento: string
+  dataRetirada?: string | null
+  retiradoPorNome?: string | null
 }
 
 export interface ReceberEncomendaRequest {
@@ -83,6 +85,22 @@ export interface RetiradaEncomendaResponse {
   status: StatusEncomenda
   dataRetirada: string
   retiradoPorNome: string
+}
+
+export interface ListarEncomendasResponse {
+  encomendas: Encomenda[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+export interface ListarEncomendasRequest {
+  apartamento?: string
+  bloco?: string
+  data?: string
+  page?: number
+  size?: number
 }
 
 // Notificações

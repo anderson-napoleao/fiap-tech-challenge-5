@@ -42,6 +42,7 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/portaria/encomendas").hasAuthority("ROLE_FUNCIONARIO")
             .requestMatchers(HttpMethod.GET, "/portaria/encomendas/*").hasAuthority("ROLE_FUNCIONARIO")
             .requestMatchers(HttpMethod.POST, "/portaria/encomendas").hasAuthority("ROLE_FUNCIONARIO")
             .requestMatchers(HttpMethod.POST, "/portaria/encomendas/*/retirada").hasAuthority("ROLE_FUNCIONARIO")

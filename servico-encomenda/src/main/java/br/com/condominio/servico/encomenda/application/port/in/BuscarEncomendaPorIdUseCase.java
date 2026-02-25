@@ -24,7 +24,9 @@ public interface BuscarEncomendaPorIdUseCase {
       String descricao,
       String recebidoPor,
       StatusEncomenda status,
-      Instant dataRecebimento
+      Instant dataRecebimento,
+      Instant dataRetirada,
+      String retiradoPorNome
   ) {
   }
 

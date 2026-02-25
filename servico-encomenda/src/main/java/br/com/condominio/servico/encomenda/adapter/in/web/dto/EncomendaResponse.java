@@ -14,6 +14,8 @@ public record EncomendaResponse(
     String descricao,
     String recebidoPor,
     StatusEncomenda status,
-    Instant dataRecebimento
+    Instant dataRecebimento,
+    Instant dataRetirada,
+    String retiradoPorNome
 ) {
 }

@@ -1,5 +1,12 @@
 import axios, { AxiosInstance } from 'axios'
-import { Encomenda, ReceberEncomendaRequest, RetirarEncomendaRequest, RetiradaEncomendaResponse } from '@/types'
+import {
+  Encomenda,
+  ListarEncomendasRequest,
+  ListarEncomendasResponse,
+  ReceberEncomendaRequest,
+  RetirarEncomendaRequest,
+  RetiradaEncomendaResponse,
+} from '@/types'
 
 class EncomendaService {
   private api: AxiosInstance
@@ -90,6 +97,24 @@ class EncomendaService {
         throw new Error('Acesso negado. Esta operação é permitida apenas para funcionário.')
       }
       throw new Error('Erro ao buscar encomenda.')
+    }
+  }
+
+  async listarEncomendas(params: ListarEncomendasRequest): Promise<ListarEncomendasResponse> {
+    try {
+      const response = await this.api.get('/portaria/encomendas', { params })
+      return response.data
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        throw new Error('Filtros ou paginacao invalidos.')
+      }
+      if (error.response?.status === 401) {
+        throw new Error('Nao autorizado. Faca login novamente.')
+      }
+      if (error.response?.status === 403) {
+        throw new Error('Acesso negado. Esta operacao e permitida apenas para funcionario.')
+      }
+      throw new Error('Erro ao listar encomendas.')
     }
   }
 }

@@ -11,6 +11,7 @@ import br.com.condominio.servico.encomenda.adapter.in.web.PortariaEncomendaContr
 import br.com.condominio.servico.encomenda.application.exception.EncomendaNaoEncontradaException;
 import br.com.condominio.servico.encomenda.application.port.in.BaixarEncomendaRetiradaUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.BuscarEncomendaPorIdUseCase;
+import br.com.condominio.servico.encomenda.application.port.in.ListarEncomendasPortariaUseCase;
 import br.com.condominio.servico.encomenda.application.port.in.ReceberEncomendaUseCase;
 import br.com.condominio.servico.encomenda.domain.StatusEncomenda;
 import br.com.condominio.servico.encomenda.infrastructure.security.SecurityConfig;
@@ -58,6 +59,9 @@ class LogJsonContractTest {
 
   @MockBean
   private BuscarEncomendaPorIdUseCase buscarEncomendaPorIdUseCase;
+
+  @MockBean
+  private ListarEncomendasPortariaUseCase listarEncomendasPortariaUseCase;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 

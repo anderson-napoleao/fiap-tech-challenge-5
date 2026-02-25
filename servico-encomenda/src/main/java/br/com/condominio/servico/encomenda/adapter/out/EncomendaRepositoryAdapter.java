@@ -6,7 +6,12 @@ import br.com.condominio.servico.encomenda.domain.StatusEncomenda;
 import br.com.condominio.servico.encomenda.infrastructure.persistence.entity.EncomendaEntity;
 import br.com.condominio.servico.encomenda.infrastructure.persistence.repository.SpringDataEncomendaRepository;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +39,33 @@ public class EncomendaRepositoryAdapter implements EncomendaRepositoryPort {
       throw new IllegalArgumentException("Encomenda obrigatoria");
     }
     return toDomain(encomendaRepository.save(toEntity(encomenda)));
+  }
+
+  @Override
+  public ResultadoListagem listar(FiltroListagem filtro) {
+    if (filtro == null) {
+      throw new IllegalArgumentException("Filtro obrigatorio");
+    }
+    if (filtro.page() < 0) {
+      throw new IllegalArgumentException("Page invalida");
+    }
+    if (filtro.size() <= 0) {
+      throw new IllegalArgumentException("Size invalido");
+    }
+
+    Page<EncomendaEntity> page = encomendaRepository.findByFiltros(
+        normalizarFiltro(filtro.apartamento()),
+        normalizarFiltro(filtro.bloco()),
+        inicioDoDiaUtc(filtro.data()),
+        fimDoDiaUtc(filtro.data()),
+        PageRequest.of(filtro.page(), filtro.size(), Sort.by(Sort.Direction.DESC, "dataRecebimento"))
+    );
+
+    return new ResultadoListagem(
+        page.stream().map(this::toDomain).toList(),
+        page.getTotalElements(),
+        page.getTotalPages()
+    );
   }
 
   private EncomendaEntity toEntity(Encomenda encomenda) {
@@ -67,5 +99,27 @@ public class EncomendaRepositoryAdapter implements EncomendaRepositoryPort {
     }
 
     return encomenda;
+  }
+
+  private String normalizarFiltro(String valor) {
+    if (valor == null) {
+      return null;
+    }
+    String normalizado = valor.trim();
+    return normalizado.isEmpty() ? null : normalizado;
+  }
+
+  private Instant inicioDoDiaUtc(LocalDate data) {
+    if (data == null) {
+      return null;
+    }
+    return data.atStartOfDay().toInstant(ZoneOffset.UTC);
+  }
+
+  private Instant fimDoDiaUtc(LocalDate data) {
+    if (data == null) {
+      return null;
+    }
+    return data.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
   }
 }

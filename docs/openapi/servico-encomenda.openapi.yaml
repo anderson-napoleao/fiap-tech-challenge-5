@@ -15,6 +15,75 @@ security:
   - bearerAuth: []
 paths:
   /portaria/encomendas:
+    get:
+      tags: [Portaria]
+      summary: Listar encomendas com paginacao e filtros
+      description: |
+        Lista encomendas da portaria com paginacao.
+        Permite filtrar opcionalmente por apartamento, bloco e data de recebimento.
+      operationId: listarEncomendas
+      parameters:
+        - name: apartamento
+          in: query
+          required: false
+          description: Filtro opcional por apartamento
+          schema:
+            type: string
+        - name: bloco
+          in: query
+          required: false
+          description: Filtro opcional por bloco
+          schema:
+            type: string
+        - name: data
+          in: query
+          required: false
+          description: Filtro opcional por data de recebimento (formato YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          required: false
+          description: Indice da pagina (inicia em 0)
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          description: Tamanho da pagina (1 a 100)
+          schema:
+            type: integer
+            format: int32
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de encomendas retornada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListarEncomendasResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '403':
+          description: Sem permissao (requer ROLE_FUNCIONARIO)
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       tags: [Portaria]
       summary: Registrar recebimento de encomenda
@@ -50,6 +119,49 @@ paths:
           description: Nao autenticado
         '403':
           description: Sem permissao (requer ROLE_FUNCIONARIO)
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /portaria/encomendas/{id}:
+    get:
+      tags: [Portaria]
+      summary: Buscar detalhes de uma encomenda
+      description: Retorna os detalhes da encomenda pelo identificador.
+      operationId: buscarEncomendaPorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador da encomenda
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Encomenda encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncomendaResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '403':
+          description: Sem permissao (requer ROLE_FUNCIONARIO)
+        '404':
+          description: Encomenda nao encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Erro interno
           content:
@@ -175,6 +287,32 @@ components:
         dataRecebimento:
           type: string
           format: date-time
+        dataRetirada:
+          type: string
+          format: date-time
+          nullable: true
+        retiradoPorNome:
+          type: string
+          nullable: true
+    ListarEncomendasResponse:
+      type: object
+      properties:
+        encomendas:
+          type: array
+          items:
+            $ref: '#/components/schemas/EncomendaResponse'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
     BaixaEncomendaResponse:
       type: object
       properties:

@@ -12,6 +12,8 @@ Responsabilidades:
 
 ## Endpoints principais
 
+- `GET /portaria/encomendas` (`ROLE_FUNCIONARIO`) com paginacao e filtros `apartamento`/`bloco`/`data` (YYYY-MM-DD)
+- `GET /portaria/encomendas/{id}` (`ROLE_FUNCIONARIO`)
 - `POST /portaria/encomendas` (`ROLE_FUNCIONARIO`)
 - `POST /portaria/encomendas/{id}/retirada` (`ROLE_FUNCIONARIO`)
 - `GET /actuator/health`
