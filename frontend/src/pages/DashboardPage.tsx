@@ -303,38 +303,6 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
               </CardContent>
             </Card>
 
-            {/* Minhas Encomendas */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Package className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Minhas Encomendas</CardTitle>
-                    <CardDescription>
-                      Acompanhe suas encomendas recebidas
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="text-gray-500">Aguardando:</span>
-                    <span className="ml-2 text-gray-900">2 encomendas</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-500">Retiradas:</span>
-                    <span className="ml-2 text-gray-900">5 este mês</span>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full mt-4" disabled>
-                  Ver Detalhes (Em breve)
-                </Button>
-              </CardContent>
-            </Card>
-
             {/* Dados Residenciais */}
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>

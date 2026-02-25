@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { encomendaService } from '@/services/encomendaService'
+import { usuarioService } from '@/services/usuarioService'
 import { ReceberEncomendaForm, Encomenda } from '@/types'
 import { ArrowLeft, Package, CheckCircle, AlertCircle } from 'lucide-react'
 
@@ -12,6 +13,7 @@ export function ReceberEncomendaPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [encomendaRecebida, setEncomendaRecebida] = useState<Encomenda | null>(null)
   const [error, setError] = useState<string>('')
+  const [nomeUsuarioLogado, setNomeUsuarioLogado] = useState<string>('')
   const navigate = useNavigate()
 
   const {
@@ -20,6 +22,38 @@ export function ReceberEncomendaPage() {
     reset,
     formState: { errors },
   } = useForm<ReceberEncomendaForm>()
+
+  useEffect(() => {
+    let ativo = true
+
+    const carregarNomeUsuario = async () => {
+      try {
+        const dadosUsuario = await usuarioService.getMeuPerfil()
+        if (!ativo) {
+          return
+        }
+        setNomeUsuarioLogado(dadosUsuario.nomeCompleto || '')
+      } catch {
+        const userDataRaw = localStorage.getItem('user_data')
+        if (!userDataRaw || !ativo) {
+          return
+        }
+
+        try {
+          const userData = JSON.parse(userDataRaw)
+          setNomeUsuarioLogado(userData?.nomeCompleto || '')
+        } catch {
+          setNomeUsuarioLogado('')
+        }
+      }
+    }
+
+    carregarNomeUsuario()
+
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   const onSubmit = async (data: ReceberEncomendaForm) => {
     setIsLoading(true)
@@ -50,7 +84,7 @@ export function ReceberEncomendaPage() {
     <div className="min-h-screen bg-gray-50">
       <Header 
         usuarioLogado={true}
-        nomeUsuario=""
+        nomeUsuario={nomeUsuarioLogado}
         mostrarLinksExternos={true}
       />
       
@@ -99,7 +133,7 @@ export function ReceberEncomendaPage() {
                       <p><strong>Apartamento:</strong> {encomendaRecebida.apartamento} {encomendaRecebida.bloco}</p>
                       <p><strong>Descrição:</strong> {encomendaRecebida.descricao}</p>
                       <p><strong>Status:</strong> {encomendaRecebida.status}</p>
-                      <p><strong>Recebido por:</strong> {encomendaRecebida.recebidoPor || 'Portaria'}</p>
+                      <p><strong>Recebido por:</strong> {nomeUsuarioLogado || encomendaRecebida.recebidoPor || 'Portaria'}</p>
                     </div>
                   </div>
                   <div className="mt-4">
@@ -289,30 +323,6 @@ export function ReceberEncomendaPage() {
             </Card>
           )}
 
-          {/* Estatísticas Rápidas */}
-          <div className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Estatísticas do Dia</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">5</div>
-                    <div className="text-sm text-gray-600">Encomendas Recebidas</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">3</div>
-                    <div className="text-sm text-gray-600">Encomendas Retiradas</div>
-                  </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">2</div>
-                    <div className="text-sm text-gray-600">Pendentes de Retirada</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </main>
     </div>

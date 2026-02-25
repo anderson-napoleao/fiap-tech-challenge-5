@@ -335,9 +335,6 @@ export function ConfirmarNotificacoesPage() {
                             <div className="flex items-center justify-between mt-3">
                               <div className="text-sm text-gray-600">
                                 <span>Canal: {notificacao.canal}</span>
-                                {notificacao.destino && (
-                                  <span className="ml-4">Para: {notificacao.destino}</span>
-                                )}
                               </div>
                               <Button
                                 variant="outline"
