@@ -16,8 +16,8 @@ public interface SpringDataEncomendaRepository extends JpaRepository<EncomendaEn
   @Query("""
       SELECT e
       FROM EncomendaEntity e
-      WHERE (:apartamento IS NULL OR UPPER(e.apartamento) = UPPER(:apartamento))
-        AND (:bloco IS NULL OR UPPER(e.bloco) = UPPER(:bloco))
+      WHERE (:apartamento IS NULL OR UPPER(e.apartamento) = :apartamento)
+        AND (:bloco IS NULL OR UPPER(e.bloco) = :bloco)
         AND (:dataInicio IS NULL OR e.dataRecebimento >= :dataInicio)
         AND (:dataFim IS NULL OR e.dataRecebimento < :dataFim)
       """)

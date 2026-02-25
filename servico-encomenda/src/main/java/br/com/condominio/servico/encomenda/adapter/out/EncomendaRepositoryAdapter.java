@@ -8,6 +8,7 @@ import br.com.condominio.servico.encomenda.infrastructure.persistence.repository
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Locale;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -106,7 +107,7 @@ public class EncomendaRepositoryAdapter implements EncomendaRepositoryPort {
       return null;
     }
     String normalizado = valor.trim();
-    return normalizado.isEmpty() ? null : normalizado;
+    return normalizado.isEmpty() ? null : normalizado.toUpperCase(Locale.ROOT);
   }
 
   private Instant inicioDoDiaUtc(LocalDate data) {
