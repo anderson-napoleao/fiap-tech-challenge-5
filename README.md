@@ -9,7 +9,6 @@ Plataforma de gestão condominial baseada em microserviços, com foco em arquite
 #### 1. Rodar somente com Docker (recomendado para uso)
 
 - Docker Desktop (ou Docker Engine com Docker Compose)
-- PowerShell 7+ no Windows (opcional, para usar `start.ps1`)
 
 📌 Nesse cenário, **Java e Maven no host não são obrigatórios**.
 
@@ -23,14 +22,16 @@ Plataforma de gestão condominial baseada em microserviços, com foco em arquite
 
 No diretório raiz:
 
-```powershell
-./start.ps1
+```bash
+docker compose up -d --build
 ```
 
-Alternativa manual:
+O serviço `cdc-init` registra automaticamente os connectors Debezium no Kafka Connect.
 
-```powershell
-docker compose up -d
+Para conferir:
+
+```bash
+docker compose logs -f cdc-init
 ```
 
 ### Acessos principais
@@ -73,32 +74,32 @@ Pré-requisitos para testes:
 
 ### Suite padrão (unitários + web + arquitetura)
 
-```powershell
+```bash
 mvn test
 ```
 
 ### Testes integrados com Testcontainers
 
-```powershell
-mvn test '-Dtestcontainers.enabled=true'
+```bash
+mvn test -Dtestcontainers.enabled=true
 ```
 
 ### Apenas teste integrado cross-module
 
-```powershell
-mvn -pl tests-integracao-sistema -am test '-Dtestcontainers.enabled=true' -Dtest=FluxoCadastroUsuarioCrossModuleTest '-Dsurefire.failIfNoSpecifiedTests=false'
+```bash
+mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoCadastroUsuarioCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
 ### Qualidade estática (quality gate)
 
-```powershell
+```bash
 mvn -Pquality verify
 ```
 
 Execução local mais rápida (sem OWASP):
 
-```powershell
-mvn -Pquality -DskipTests '-Ddependency-check.skip=true' verify
+```bash
+mvn -Pquality -DskipTests -Ddependency-check.skip=true verify
 ```
 
 ## Relatório técnico do sistema

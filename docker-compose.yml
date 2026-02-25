@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Infraestrutura de Dados
   postgres-identidade:
@@ -106,6 +104,31 @@ services:
       - postgres-usuario
       - postgres-encomenda
       - postgres-notificacao
+    networks:
+      - condominio-net
+
+  cdc-init:
+    image: curlimages/curl:8.11.1
+    container_name: condominio-cdc-init
+    depends_on:
+      - kafka-connect
+    command: >
+      sh -c "
+        set -eu;
+        echo 'Aguardando Kafka Connect...';
+        until curl -sSf http://kafka-connect:8083/connectors > /dev/null; do sleep 2; done;
+        echo 'Registrando connector encomenda-outbox-connector...';
+        curl -sSf -X PUT -H 'Content-Type: application/json' --data @/connectors/encomenda-outbox-connector.config.json http://kafka-connect:8083/connectors/encomenda-outbox-connector/config > /dev/null;
+        echo 'Registrando connector notificacao-outbox-connector...';
+        curl -sSf -X PUT -H 'Content-Type: application/json' --data @/connectors/notificacao-outbox-connector.config.json http://kafka-connect:8083/connectors/notificacao-outbox-connector/config > /dev/null;
+        echo 'Validando status dos connectors...';
+        curl -sSf http://kafka-connect:8083/connectors/encomenda-outbox-connector/status > /dev/null;
+        curl -sSf http://kafka-connect:8083/connectors/notificacao-outbox-connector/status > /dev/null;
+        echo 'Connectors CDC registrados com sucesso.'
+      "
+    volumes:
+      - ./infra/debezium:/connectors:ro
+    restart: "no"
     networks:
       - condominio-net
 
@@ -277,6 +300,7 @@ services:
     depends_on:
       - postgres-notificacao
       - kafka
+      - cdc-init
       - servico-usuario
       - servico-identidade
       - elasticsearch

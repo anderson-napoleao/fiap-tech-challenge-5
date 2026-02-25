@@ -1,163 +1,114 @@
-# Docker Compose - Sistema Condomínio
+# Docker Compose - Sistema Condominio
 
-## 🏗️ Arquitetura
+Este documento descreve a operacao do ambiente local com Docker Compose, sem scripts auxiliares.
 
-### Serviços da Aplicação
-- **frontend** (3000): Interface web React
-- **servico-identidade** (8081): Gestão de identidade e autenticação
-- **servico-usuario** (8082): Gestão de usuários e moradores
-- **servico-encomenda** (8083): Gestão de encomendas
-- **servico-notificacao** (8084): Sistema de notificações
+## Servicos
 
-### Infraestrutura de Dados
-- **postgres-identidade** (5431): Banco do serviço de identidade
-- **postgres-usuario** (5434): Banco do serviço de usuários
-- **postgres-encomenda** (5432): Banco do serviço de encomendas
-- **postgres-notificacao** (5433): Banco do serviço de notificações
+### Aplicacao
+- `frontend` (`3000`): interface web React
+- `servico-identidade` (`8081`): autenticacao e emissao de JWT
+- `servico-usuario` (`8082`): cadastro de usuarios e moradores
+- `servico-encomenda` (`8083`): recebimento, listagem e retirada de encomendas
+- `servico-notificacao` (`8084`): notificacoes para moradores
 
-### Infraestrutura de Mensageria
-- **zookeeper** (2181): Coordenação Kafka
-- **kafka** (9092): Broker de eventos
-- **kafka-connect** (8085): Conectores CDC
+### Dados e mensageria
+- `postgres-identidade` (`5431`)
+- `postgres-usuario` (`5434`)
+- `postgres-encomenda` (`5432`)
+- `postgres-notificacao` (`5433`)
+- `zookeeper` (`2181`)
+- `kafka` (`9092`)
+- `kafka-connect` (`8085`)
+- `cdc-init`: registra automaticamente os connectors Debezium ao subir o ambiente
 
-### Stack ELK (Logs e Tracing)
-- **elasticsearch** (9200): Armazenamento de logs
-- **logstash** (5044): Processamento de logs
-- **kibana** (5601): Visualização de logs
-- **filebeat**: Coleta de logs dos containers
+### Observabilidade e apoio
+- `elasticsearch` (`9200`)
+- `logstash` (`5044`)
+- `kibana` (`5601`)
+- `filebeat`
+- `kafka-ui` (`8086`)
+- `adminer` (`8087`)
+- `docs-site` (`8090`)
 
-### Interfaces de Visualização
-- **kafka-ui** (8086): Interface Kafka
-- **adminer** (8087): Interface bancos de dados
+## Como subir
 
-## 🚀 Comandos
+No diretorio raiz:
 
-### Iniciar Sistema Completo
 ```bash
-# PowerShell
-./start.ps1
-
-# Bash/Linux
-./start.sh
+docker compose up -d --build
 ```
 
-### Gerenciamento
+Verificar status:
+
 ```bash
-# Apenas build das imagens
-./start.ps1 -Build
-
-# Ver status dos containers
-./start.ps1 -Status
-
-# Ver logs (todos ou serviço específico)
-./start.ps1 -Logs
-./start.ps1 -Logs -Service servico-usuario
-
-# Parar sistema completo
-./start.ps1 -Down
+docker compose ps
 ```
 
-### Comandos Docker
+Ver logs:
+
 ```bash
-# Subir tudo
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f [serviço]
-
-# Parar tudo
-docker-compose down --volumes --remove-orphans
-
-# Rebuild específico
-docker-compose up -d --build servico-usuario
+docker compose logs -f
+docker compose logs -f servico-encomenda
+docker compose logs -f cdc-init
 ```
 
-## 📊 Acesso às Interfaces
+Parar ambiente:
 
-### Aplicação e Interfaces
-- **Frontend**: http://localhost:3000
-  - Interface principal do sistema
-  - Login, cadastro, gestão de encomendas e notificações
-- **Kibana**: http://localhost:5601
-  - Index pattern: `condominio-logs-*`
-  - Campos disponíveis: service, log_level, trace_id, span_id
-
-### Mensageria
-- **Kafka UI**: http://localhost:8086
-  - Tópicos: `encomenda.recebida`, etc.
-  - Connectors: Debezium CDC
-
-### Bancos de Dados
-- **Adminer**: http://localhost:8087
-  - PostgreSQL hosts:
-    - Identidade: postgres-identidade:5432
-    - Usuário: postgres-usuario:5432
-    - Encomenda: postgres-encomenda:5432
-    - Notificação: postgres-notificacao:5432
-
-## 🔧 Configuração de Logs
-
-### Formato de Logging
-Os serviços usam structured logging com JSON:
-```json
-{
-  "timestamp": "2024-02-25T00:30:00.000Z",
-  "level": "INFO",
-  "thread": "http-nio-8082-exec-1",
-  "logger": "br.com.condominio.servico.usuario",
-  "message": "Usuário criado com sucesso",
-  "traceId": "abc123",
-  "spanId": "def456",
-  "service": "servico-usuario"
-}
+```bash
+docker compose down
 ```
 
-### Kibana Dashboards
-1. **Logs por Serviço**: Filtrar por campo `service`
-2. **Distribuição de Erros**: Filtrar `log_level: ERROR`
-3. **Tracing Distribuído**: Agrupar por `trace_id`
-4. **Performance**: Métricas de tempo por operação
+Parar e remover volumes:
 
-## 🏥 Health Checks
-
-Todos os serviços expõem health checks:
-- `GET /actuator/health`
-- Docker health checks configurados
-- Status disponível em `docker-compose ps`
-
-## 🔒 Segurança
-
-- Non-root users nos containers
-- Senhas padrão apenas para desenvolvimento
-- Volumes persistentes para dados
-- Network isolation via bridge network
-
-## 📈 Performance
-
-- Java container memory: 75% do container
-- Health checks a cada 30s
-- Logs rotativos (10MB, 30 dias)
-- Elasticsearch com 512MB RAM (desenvolvimento)
-
-## 🐛 Troubleshooting
-
-### Problemas Comuns
-1. **Portas em uso**: Verificar se portas estão livres
-2. **Memória insuficiente**: Aumentar RAM do Docker Desktop
-3. **Logs não aparecem**: Verificar Filebeat e Logstash
-4. **Serviços não iniciam**: Verificar health checks e logs
-
-### Comandos Úteis
 ```bash
-# Ver uso de recursos
-docker stats
+docker compose down -v --remove-orphans
+```
 
-# Limpar tudo
-docker system prune -a
+## CDC e Connectors
 
-# Entrar em container
-docker exec -it condominio-servico-usuario bash
+O servico `cdc-init` aguarda o Kafka Connect ficar disponivel e aplica os conectores:
+- `encomenda-outbox-connector`
+- `notificacao-outbox-connector`
 
-# Ver logs específicos
-docker logs condominio-elasticsearch
+Arquivos usados:
+- `infra/debezium/encomenda-outbox-connector.config.json`
+- `infra/debezium/notificacao-outbox-connector.config.json`
+
+Validacao:
+
+```bash
+docker compose logs -f cdc-init
+curl http://localhost:8085/connectors
+curl http://localhost:8085/connectors/encomenda-outbox-connector/status
+curl http://localhost:8085/connectors/notificacao-outbox-connector/status
+```
+
+## Enderecos uteis
+
+- Frontend: `http://localhost:3000`
+- Swagger Identidade: `http://localhost:8081/swagger-ui/index.html`
+- Swagger Usuario: `http://localhost:8082/swagger-ui/index.html`
+- Swagger Encomenda: `http://localhost:8083/swagger-ui/index.html`
+- Swagger Notificacao: `http://localhost:8084/swagger-ui/index.html`
+- Kafka UI: `http://localhost:8086`
+- Adminer: `http://localhost:8087`
+- Kibana: `http://localhost:5601`
+- Portal de documentacao: `http://localhost:8090`
+
+## Troubleshooting rapido
+
+- Se um servico falhar no boot:
+```bash
+docker compose logs -f <servico>
+```
+
+- Rebuild de um servico:
+```bash
+docker compose up -d --build <servico>
+```
+
+- Limpeza completa do ambiente local:
+```bash
+docker compose down -v --remove-orphans
+docker system prune -f
 ```
