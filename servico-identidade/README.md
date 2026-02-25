@@ -1,57 +1,64 @@
-# servico-identidade
+﻿# servico-identidade
 
-Servico de identidade com JWT simples (HS256) para ambiente local.
+## Resumo
 
-## Requisitos
+Microserviço responsável por autenticação e autorização base do sistema.
 
-- Java 21
-- Maven 3.9+
+Responsabilidades:
 
-## Como subir
-
-No diretorio raiz do repositorio:
-
-```bash
-mvn -pl servico-identidade spring-boot:run
-```
+- emitir token JWT (`/auth/token`)
+- criar, desabilitar e remover identidades (`/admin/users`)
+- persistir credenciais e papéis em PostgreSQL
 
 ## Endpoints principais
 
-- Health: `GET /actuator/health`
-- Criar usuario: `POST /admin/users`
-- Remover usuario: `DELETE /admin/users/{id}`
-- Desabilitar usuario: `PATCH /admin/users/{id}/disable`
-- Gerar token: `POST /auth/token`
+- `POST /auth/token`
+- `POST /admin/users`
+- `PATCH /admin/users/{id}/disable`
+- `DELETE /admin/users/{id}`
+- `GET /actuator/health`
 
-## Criar usuario
+## Stack
 
-```bash
-curl -i -X POST "http://localhost:8081/admin/users" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email":"maria@teste.com",
-    "password":"123456",
-    "role":"USER"
-  }'
+- Java 21
+- Spring Boot Web
+- Spring Security (Basic + JWT)
+- Spring Data JPA
+- PostgreSQL + Flyway
+- OpenAPI/Swagger
+- Micrometer Tracing + Logback JSON
+
+## Clean Architecture
+
+- `domain`: regras de identidade sem framework
+- `application`: casos de uso e portas
+- `adapter`/`infrastructure`: HTTP, segurança e persistência
+
+Qualidade arquitetural protegida por ArchUnit.
+
+## Desafios e soluções
+
+1. Evoluir de store em memória para persistência real.
+- Solução: `PostgresUsuarioStore` + entidades JPA + Flyway.
+
+2. Padronizar emissão/consumo de JWT.
+- Solução: configuração central de `issuer` e `secret`.
+
+3. Melhorar rastreabilidade operacional.
+- Solução: logs estruturados com `trace_id` e `span_id`.
+
+## Execução
+
+Pré-requisito: PostgreSQL em `localhost:5431` (ou variáveis `DB_*`).
+
+```powershell
+mvn -pl servico-identidade spring-boot:run
 ```
 
-## Gerar token JWT
+Swagger: `http://localhost:8081/swagger-ui/index.html`
 
-```bash
-curl -i -X POST "http://localhost:8081/auth/token" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username":"maria@teste.com",
-    "password":"123456"
-  }'
-```
+## Testes
 
-Resposta:
-
-```json
-{
-  "access_token": "<jwt>",
-  "token_type": "Bearer",
-  "expires_in": 3600
-}
+```powershell
+mvn -pl servico-identidade test
 ```
