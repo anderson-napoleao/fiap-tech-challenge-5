@@ -5,6 +5,9 @@ import br.com.condominio.identidade.application.port.in.GerarTokenUseCase;
 import br.com.condominio.identidade.application.port.out.TokenJwtPort;
 import br.com.condominio.identidade.application.port.out.UsuarioStorePort;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class GerarTokenService implements GerarTokenUseCase {
 
   private final UsuarioStorePort usuarioStorePort;

@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Adaptador de saida para persistencia ou integracao externa.
+ */
 @Component
 public class IdentityGatewayAdapter implements IdentityGatewayPort {
 

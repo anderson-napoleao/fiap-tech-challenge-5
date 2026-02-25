@@ -6,6 +6,9 @@ import br.com.condominio.servico.notificacao.domain.Notificacao;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class ListarNotificacoesPendentesService implements ListarNotificacoesPendentesUseCase {
 
   private final NotificacaoRepositoryPort notificacaoRepositoryPort;

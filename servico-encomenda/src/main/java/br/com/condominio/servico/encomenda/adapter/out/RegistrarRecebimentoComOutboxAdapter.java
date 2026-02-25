@@ -14,6 +14,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Adaptador de saida para persistencia ou integracao externa.
+ */
 @Component
 public class RegistrarRecebimentoComOutboxAdapter implements RegistrarRecebimentoComOutboxPort {
 

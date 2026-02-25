@@ -3,6 +3,9 @@ package br.com.condominio.servico.encomenda.application.port.in;
 import br.com.condominio.servico.encomenda.domain.StatusEncomenda;
 import java.time.Instant;
 
+/**
+ * Define o contrato de entrada (use case) da aplicacao.
+ */
 public interface ReceberEncomendaUseCase {
 
   record Command(

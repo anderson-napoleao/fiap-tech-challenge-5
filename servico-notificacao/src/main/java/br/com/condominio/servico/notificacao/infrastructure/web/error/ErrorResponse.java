@@ -2,6 +2,9 @@ package br.com.condominio.servico.notificacao.infrastructure.web.error;
 
 import java.time.OffsetDateTime;
 
+/**
+ * Padroniza tratamento e resposta de erros HTTP.
+ */
 public record ErrorResponse(
     OffsetDateTime timestamp,
     int status,

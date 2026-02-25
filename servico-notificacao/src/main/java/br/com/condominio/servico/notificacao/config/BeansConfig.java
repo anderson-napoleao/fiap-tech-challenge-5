@@ -12,6 +12,9 @@ import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configura a composicao de beans e dependencias do modulo.
+ */
 @Configuration
 public class BeansConfig {
 

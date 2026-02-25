@@ -9,6 +9,9 @@ import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
+/**
+ * Adaptador de saida para persistencia ou integracao externa.
+ */
 @Component
 public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
 

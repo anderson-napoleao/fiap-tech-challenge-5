@@ -6,6 +6,9 @@ import br.com.condominio.servico.notificacao.domain.Notificacao;
 import java.time.Clock;
 import java.util.Objects;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class ProcessarEncomendaRecebidaService implements ProcessarEncomendaRecebidaUseCase {
 
   private final RegistrarNotificacaoComOutboxPort registrarNotificacaoComOutboxPort;

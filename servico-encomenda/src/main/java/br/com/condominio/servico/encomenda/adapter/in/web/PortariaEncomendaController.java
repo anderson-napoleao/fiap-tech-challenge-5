@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Adaptador HTTP de entrada que delega para casos de uso.
+ */
 @RestController
 @RequestMapping("/portaria/encomendas")
 public class PortariaEncomendaController {

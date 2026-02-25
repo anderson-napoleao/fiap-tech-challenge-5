@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentMap;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+/**
+ * Implementa armazenamento de usuarios para a infraestrutura de identidade.
+ */
 @Component
 public class InMemoryUsuarioStore implements UsuarioStorePort {
 

@@ -22,6 +22,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Configura autenticacao e autorizacao do servico.
+ */
 @Configuration
 public class SecurityConfig {
 

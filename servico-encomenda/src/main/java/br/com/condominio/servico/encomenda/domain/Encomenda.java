@@ -2,6 +2,9 @@ package br.com.condominio.servico.encomenda.domain;
 
 import java.time.Instant;
 
+/**
+ * Representa regra e comportamento de negocio do dominio.
+ */
 public class Encomenda {
 
   private Long id;

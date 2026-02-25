@@ -4,6 +4,9 @@ import br.com.condominio.servico.notificacao.domain.CanalNotificacao;
 import br.com.condominio.servico.notificacao.domain.StatusNotificacao;
 import java.time.Instant;
 
+/**
+ * Representa contrato de evento utilizado pela aplicacao.
+ */
 public record NotificacaoSolicitadaEvent(
     String eventId,
     int eventVersion,

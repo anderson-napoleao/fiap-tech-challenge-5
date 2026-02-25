@@ -15,6 +15,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Adaptador de saida para persistencia ou integracao externa.
+ */
 @Component
 public class RegistrarNotificacaoComOutboxAdapter implements RegistrarNotificacaoComOutboxPort {
 

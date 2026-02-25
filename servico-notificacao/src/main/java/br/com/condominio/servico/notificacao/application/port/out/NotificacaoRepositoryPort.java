@@ -4,6 +4,9 @@ import br.com.condominio.servico.notificacao.domain.Notificacao;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Define o contrato de saida da aplicacao para integracoes externas.
+ */
 public interface NotificacaoRepositoryPort {
 
   Notificacao salvar(Notificacao notificacao);

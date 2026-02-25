@@ -4,6 +4,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Implementa observabilidade para logs e correlacao de rastreamento.
+ */
 @Configuration
 public class ObservabilityWebMvcConfig implements WebMvcConfigurer {
 

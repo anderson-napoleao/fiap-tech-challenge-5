@@ -2,6 +2,9 @@ package br.com.condominio.servico.usuario.application.port.in;
 
 import br.com.condominio.servico.usuario.domain.TipoUsuario;
 
+/**
+ * Define o contrato de entrada (use case) da aplicacao.
+ */
 public interface ObterMeuPerfilUseCase {
 
   record Command(String identityId) {

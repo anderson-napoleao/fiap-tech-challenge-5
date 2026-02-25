@@ -6,6 +6,9 @@ import br.com.condominio.servico.encomenda.domain.Encomenda;
 import java.time.Clock;
 import java.util.Objects;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class ReceberEncomendaService implements ReceberEncomendaUseCase {
 
   private final RegistrarRecebimentoComOutboxPort registrarRecebimentoComOutboxPort;

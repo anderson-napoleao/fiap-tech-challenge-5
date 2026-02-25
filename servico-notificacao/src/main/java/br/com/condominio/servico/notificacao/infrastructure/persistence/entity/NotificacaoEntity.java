@@ -10,6 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
+/**
+ * Entidade de persistencia mapeada para o banco de dados.
+ */
 @Entity
 @Table(name = "notificacoes")
 public class NotificacaoEntity {

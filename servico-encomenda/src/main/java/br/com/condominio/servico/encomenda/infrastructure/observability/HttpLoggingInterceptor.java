@@ -11,6 +11,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * Implementa observabilidade para logs e correlacao de rastreamento.
+ */
 @Component
 public class HttpLoggingInterceptor implements HandlerInterceptor {
 

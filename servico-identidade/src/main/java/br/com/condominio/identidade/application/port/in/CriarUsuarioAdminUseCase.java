@@ -2,6 +2,9 @@ package br.com.condominio.identidade.application.port.in;
 
 import java.util.List;
 
+/**
+ * Define o contrato de entrada (use case) da aplicacao.
+ */
 public interface CriarUsuarioAdminUseCase {
 
   record Command(String email, String password, String role) {

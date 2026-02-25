@@ -11,6 +11,9 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.stereotype.Component;
 
+/**
+ * Configura autenticacao e autorizacao do servico.
+ */
 @Component
 public class JwtTokenServiceAdapter implements TokenJwtPort {
 

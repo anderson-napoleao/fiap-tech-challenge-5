@@ -7,6 +7,9 @@ import br.com.condominio.servico.usuario.application.port.out.IdentityGatewayPor
 import br.com.condominio.servico.usuario.application.port.out.UsuarioRepositoryPort;
 import br.com.condominio.servico.usuario.domain.Usuario;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class CadastrarUsuarioService implements CadastrarUsuarioUseCase {
 
   private static final String ROLE_USER = "USER";

@@ -6,6 +6,9 @@ import br.com.condominio.servico.usuario.application.port.out.UsuarioRepositoryP
 import br.com.condominio.servico.usuario.domain.TipoUsuario;
 import br.com.condominio.servico.usuario.domain.Usuario;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class AtualizarMeuPerfilService implements AtualizarMeuPerfilUseCase {
 
   private final UsuarioRepositoryPort usuarioRepositoryPort;

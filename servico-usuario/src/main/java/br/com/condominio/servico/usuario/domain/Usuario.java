@@ -1,5 +1,8 @@
 package br.com.condominio.servico.usuario.domain;
 
+/**
+ * Representa regra e comportamento de negocio do dominio.
+ */
 public class Usuario {
   private Long id;
   private String identityId;

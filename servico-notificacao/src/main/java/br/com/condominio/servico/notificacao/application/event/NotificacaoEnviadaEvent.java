@@ -2,6 +2,9 @@ package br.com.condominio.servico.notificacao.application.event;
 
 import java.time.Instant;
 
+/**
+ * Representa contrato de evento utilizado pela aplicacao.
+ */
 public record NotificacaoEnviadaEvent(
     String eventId,
     int eventVersion,

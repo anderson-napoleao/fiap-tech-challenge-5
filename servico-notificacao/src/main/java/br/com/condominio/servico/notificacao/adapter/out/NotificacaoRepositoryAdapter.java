@@ -13,6 +13,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+/**
+ * Adaptador de saida para persistencia ou integracao externa.
+ */
 @Component
 public class NotificacaoRepositoryAdapter implements NotificacaoRepositoryPort {
 

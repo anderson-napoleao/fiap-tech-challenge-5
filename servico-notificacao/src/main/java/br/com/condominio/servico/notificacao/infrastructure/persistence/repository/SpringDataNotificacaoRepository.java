@@ -7,6 +7,9 @@ import br.com.condominio.servico.notificacao.infrastructure.persistence.entity.N
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repositorio Spring Data para acesso a persistencia.
+ */
 public interface SpringDataNotificacaoRepository extends JpaRepository<NotificacaoEntity, String> {
 
   Optional<NotificacaoEntity> findBySourceEventId(String sourceEventId);

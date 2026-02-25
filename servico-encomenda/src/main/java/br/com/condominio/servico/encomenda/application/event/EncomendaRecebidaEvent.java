@@ -3,6 +3,9 @@ package br.com.condominio.servico.encomenda.application.event;
 import br.com.condominio.servico.encomenda.domain.StatusEncomenda;
 import java.time.Instant;
 
+/**
+ * Representa contrato de evento utilizado pela aplicacao.
+ */
 public record EncomendaRecebidaEvent(
     String eventId,
     int eventVersion,

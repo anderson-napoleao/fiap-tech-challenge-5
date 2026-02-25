@@ -3,6 +3,9 @@ package br.com.condominio.identidade.application.service;
 import br.com.condominio.identidade.application.port.in.DesabilitarUsuarioAdminUseCase;
 import br.com.condominio.identidade.application.port.out.UsuarioStorePort;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class DesabilitarUsuarioAdminService implements DesabilitarUsuarioAdminUseCase {
 
   private final UsuarioStorePort usuarioStorePort;

@@ -4,6 +4,9 @@ import br.com.condominio.servico.notificacao.infrastructure.persistence.entity.O
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repositorio Spring Data para acesso a persistencia.
+ */
 public interface SpringDataOutboxEventRepository extends JpaRepository<OutboxEventEntity, String> {
 
   List<OutboxEventEntity> findByAggregateId(String aggregateId);

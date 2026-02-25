@@ -6,6 +6,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
+/**
+ * Entidade de persistencia mapeada para o banco de dados.
+ */
 @Entity
 @Table(name = "outbox_event")
 public class OutboxEventEntity {

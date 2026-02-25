@@ -3,6 +3,9 @@ package br.com.condominio.identidade.application.service;
 import br.com.condominio.identidade.application.port.in.CriarUsuarioAdminUseCase;
 import br.com.condominio.identidade.application.port.out.UsuarioStorePort;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class CriarUsuarioAdminService implements CriarUsuarioAdminUseCase {
 
   private final UsuarioStorePort usuarioStorePort;

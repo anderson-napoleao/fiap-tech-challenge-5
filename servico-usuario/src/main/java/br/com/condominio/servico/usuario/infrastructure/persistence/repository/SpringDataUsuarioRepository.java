@@ -4,6 +4,9 @@ import br.com.condominio.servico.usuario.infrastructure.persistence.entity.Usuar
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repositorio Spring Data para acesso a persistencia.
+ */
 public interface SpringDataUsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 
   Optional<UsuarioEntity> findByIdentityId(String identityId);

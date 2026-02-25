@@ -3,6 +3,9 @@ package br.com.condominio.servico.notificacao.application.port.in;
 import br.com.condominio.servico.notificacao.domain.StatusNotificacao;
 import java.time.Instant;
 
+/**
+ * Define o contrato de entrada (use case) da aplicacao.
+ */
 public interface ConfirmarRecebimentoNotificacaoUseCase {
 
   record Command(

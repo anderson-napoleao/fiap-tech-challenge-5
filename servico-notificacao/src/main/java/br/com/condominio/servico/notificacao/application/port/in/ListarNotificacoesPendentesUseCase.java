@@ -5,6 +5,9 @@ import br.com.condominio.servico.notificacao.domain.StatusNotificacao;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * Define o contrato de entrada (use case) da aplicacao.
+ */
 public interface ListarNotificacoesPendentesUseCase {
 
   record Command(

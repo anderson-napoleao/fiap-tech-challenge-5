@@ -3,6 +3,9 @@ package br.com.condominio.identidade.application.port.out;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Define o contrato de saida da aplicacao para integracoes externas.
+ */
 public interface UsuarioStorePort {
 
   record IdentityUserData(String id, String email, boolean enabled, Set<String> roles) {

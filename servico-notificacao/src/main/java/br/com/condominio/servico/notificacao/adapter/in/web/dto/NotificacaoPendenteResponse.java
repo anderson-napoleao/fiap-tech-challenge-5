@@ -4,6 +4,9 @@ import br.com.condominio.servico.notificacao.domain.CanalNotificacao;
 import br.com.condominio.servico.notificacao.domain.StatusNotificacao;
 import java.time.Instant;
 
+/**
+ * DTO usado para entrada e saida da API HTTP.
+ */
 public record NotificacaoPendenteResponse(
     String id,
     String encomendaId,

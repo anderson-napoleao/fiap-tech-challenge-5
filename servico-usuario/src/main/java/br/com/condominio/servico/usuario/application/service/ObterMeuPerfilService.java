@@ -5,6 +5,9 @@ import br.com.condominio.servico.usuario.application.port.in.ObterMeuPerfilUseCa
 import br.com.condominio.servico.usuario.application.port.out.UsuarioRepositoryPort;
 import br.com.condominio.servico.usuario.domain.Usuario;
 
+/**
+ * Implementa a orquestracao de regras da camada de aplicacao.
+ */
 public class ObterMeuPerfilService implements ObterMeuPerfilUseCase {
 
   private final UsuarioRepositoryPort usuarioRepositoryPort;

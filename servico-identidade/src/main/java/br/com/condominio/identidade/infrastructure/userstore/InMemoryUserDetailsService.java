@@ -8,6 +8,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
+/**
+ * Implementa armazenamento de usuarios para a infraestrutura de identidade.
+ */
 @Component
 public class InMemoryUserDetailsService implements UserDetailsService {
 

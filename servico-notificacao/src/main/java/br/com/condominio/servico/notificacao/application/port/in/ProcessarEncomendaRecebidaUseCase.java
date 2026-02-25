@@ -4,6 +4,9 @@ import br.com.condominio.servico.notificacao.domain.CanalNotificacao;
 import br.com.condominio.servico.notificacao.domain.StatusNotificacao;
 import java.time.Instant;
 
+/**
+ * Define o contrato de entrada (use case) da aplicacao.
+ */
 public interface ProcessarEncomendaRecebidaUseCase {
 
   record Command(
