@@ -35,7 +35,7 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers("/actuator/health").permitAll()
+            .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/portaria/encomendas").hasAuthority("ROLE_FUNCIONARIO")
             .requestMatchers(HttpMethod.POST, "/portaria/encomendas/*/retirada").hasAuthority("ROLE_FUNCIONARIO")
             .anyRequest().authenticated()

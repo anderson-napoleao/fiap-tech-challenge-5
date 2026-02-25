@@ -27,6 +27,8 @@ public class DefaultSecurityConfig {
                 auth
                     .requestMatchers("/actuator/health")
                     .permitAll()
+                    .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**")
+                    .permitAll()
                     .requestMatchers(HttpMethod.POST, "/auth/token")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/admin/users")

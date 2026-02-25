@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: Servico Notificacao API
+  version: 1.0.0
+  description: |
+    API do servico de notificacoes para moradores.
+    Permite listar notificacoes e confirmar recebimento.
+servers:
+  - url: http://localhost:8087
+    description: Ambiente local
+tags:
+  - name: Morador
+    description: Operacoes de notificacao para morador
+security:
+  - bearerAuth: []
+paths:
+  /morador/notificacoes:
+    get:
+      tags: [Morador]
+      summary: Listar notificacoes do morador
+      description: Lista notificacoes por morador com filtro de confirmacao e paginacao.
+      operationId: listarNotificacoesMorador
+      parameters:
+        - name: confirmada
+          in: query
+          required: false
+          description: Filtra notificacoes confirmadas (true) ou nao confirmadas (false)
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          required: false
+          description: Numero da pagina (base 0)
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          description: Tamanho da pagina
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 20
+      responses:
+        '200':
+          description: Lista de notificacoes retornada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListarNotificacoesPendentesResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '403':
+          description: Sem permissao (requer ROLE_MORADOR)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /morador/notificacoes/{id}/confirmacao:
+    post:
+      tags: [Morador]
+      summary: Confirmar recebimento de notificacao
+      description: Confirma que o morador recebeu/cientificou a notificacao.
+      operationId: confirmarNotificacao
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador da notificacao
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Confirmacao registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmacaoNotificacaoResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '403':
+          description: Sem permissao (requer ROLE_MORADOR)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Notificacao nao encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Notificacao em estado invalido para confirmacao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ListarNotificacoesPendentesResponse:
+      type: object
+      properties:
+        notificacoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificacaoPendenteResponse'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+    NotificacaoPendenteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        encomendaId:
+          type: string
+        canal:
+          $ref: '#/components/schemas/CanalNotificacao'
+        destino:
+          type: string
+        mensagem:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusNotificacao'
+        criadaEm:
+          type: string
+          format: date-time
+        enviadaEm:
+          type: string
+          format: date-time
+          nullable: true
+    ConfirmacaoNotificacaoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusNotificacao'
+        confirmadaEm:
+          type: string
+          format: date-time
+    CanalNotificacao:
+      type: string
+      enum: [PUSH, EMAIL, SMS]
+    StatusNotificacao:
+      type: string
+      enum: [PENDENTE, ENVIADA, FALHA, CONFIRMADA]
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string

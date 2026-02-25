@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: Servico Usuario API
+  version: 1.0.0
+  description: |
+    API do servico de usuarios.
+    Permite cadastro de usuario e manutencao do proprio perfil.
+servers:
+  - url: http://localhost:8082
+    description: Ambiente local
+tags:
+  - name: Usuarios
+    description: Operacoes de cadastro e perfil
+paths:
+  /users:
+    post:
+      tags: [Usuarios]
+      summary: Cadastrar novo usuario
+      description: Cadastra um usuario e cria identidade no servico de identidade.
+      operationId: cadastrarUsuario
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarUsuarioRequest'
+            examples:
+              morador:
+                value:
+                  nomeCompleto: Maria de Souza
+                  email: maria.souza@email.com
+                  senha: senhaForte123
+                  tipo: MORADOR
+                  telefone: '11999998888'
+                  cpf: '12345678900'
+                  apartamento: 502
+                  bloco: B
+      responses:
+        '201':
+          description: Usuario cadastrado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflito de cadastro (exemplo: email ja existe)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/me:
+    get:
+      tags: [Usuarios]
+      summary: Obter meu perfil
+      description: Retorna os dados do usuario autenticado.
+      operationId: obterMeuPerfil
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil retornado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '401':
+          description: Nao autenticado
+        '404':
+          description: Usuario nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Usuarios]
+      summary: Atualizar meu perfil
+      description: Atualiza os dados editaveis do usuario autenticado.
+      operationId: atualizarMeuPerfil
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarUsuarioRequest'
+            examples:
+              atualizacao:
+                value:
+                  nomeCompleto: Maria de Souza Lima
+                  telefone: '11991112222'
+                  cpf: '12345678900'
+                  apartamento: 602
+                  bloco: C
+      responses:
+        '200':
+          description: Perfil atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '404':
+          description: Usuario nao encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CriarUsuarioRequest:
+      type: object
+      required: [nomeCompleto, email, senha, tipo]
+      properties:
+        nomeCompleto:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        senha:
+          type: string
+          minLength: 1
+        tipo:
+          $ref: '#/components/schemas/TipoUsuario'
+        telefone:
+          type: string
+        cpf:
+          type: string
+        apartamento:
+          type: string
+        bloco:
+          type: string
+    AtualizarUsuarioRequest:
+      type: object
+      properties:
+        nomeCompleto:
+          type: string
+        telefone:
+          type: string
+        cpf:
+          type: string
+        apartamento:
+          type: string
+        bloco:
+          type: string
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        identityId:
+          type: string
+        nomeCompleto:
+          type: string
+        email:
+          type: string
+          format: email
+        tipo:
+          $ref: '#/components/schemas/TipoUsuario'
+        telefone:
+          type: string
+        cpf:
+          type: string
+        apartamento:
+          type: string
+        bloco:
+          type: string
+    TipoUsuario:
+      type: string
+      enum: [MORADOR, FUNCIONARIO]
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string

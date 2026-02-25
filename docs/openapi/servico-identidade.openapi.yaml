@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: Servico Identidade API
+  version: 1.0.0
+  description: |
+    API de autenticacao e administracao de identidades.
+    Fornece emissao de token JWT e operacoes administrativas de usuarios.
+servers:
+  - url: http://localhost:8081
+    description: Ambiente local
+tags:
+  - name: Auth
+    description: Emissao de token
+  - name: Admin
+    description: Administracao de usuarios de identidade
+security:
+  - basicAuth: []
+paths:
+  /auth/token:
+    post:
+      tags: [Auth]
+      summary: Gerar token JWT
+      description: Autentica credenciais e retorna token JWT para acesso aos demais servicos.
+      operationId: gerarToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthTokenRequest'
+            examples:
+              login:
+                value:
+                  username: morador@condominio.com
+                  password: senha123
+      responses:
+        '200':
+          description: Token gerado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '400':
+          description: Requisicao invalida
+        '401':
+          description: Credenciais invalidas
+  /admin/users:
+    post:
+      tags: [Admin]
+      summary: Criar usuario de identidade
+      description: |
+        Cria usuario no store de identidade com role informada.
+        Aceita role no formato `MORADOR` ou `ROLE_MORADOR` (normalizada internamente).
+      operationId: criarUsuarioAdmin
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarUsuarioRequest'
+            examples:
+              novoMorador:
+                value:
+                  email: morador@condominio.com
+                  password: senha123
+                  role: MORADOR
+      responses:
+        '201':
+          description: Usuario criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Requisicao invalida
+        '401':
+          description: Nao autenticado (Basic auth)
+  /admin/users/{id}:
+    delete:
+      tags: [Admin]
+      summary: Remover usuario de identidade
+      description: Remove usuario de identidade pelo id.
+      operationId: removerUsuarioAdmin
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador de identidade
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Usuario removido
+        '401':
+          description: Nao autenticado (Basic auth)
+  /admin/users/{id}/disable:
+    patch:
+      tags: [Admin]
+      summary: Desabilitar usuario de identidade
+      description: Desabilita login do usuario de identidade pelo id.
+      operationId: desabilitarUsuarioAdmin
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador de identidade
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Usuario desabilitado
+        '401':
+          description: Nao autenticado (Basic auth)
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    AuthTokenRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          description: Email/username da identidade
+        password:
+          type: string
+          description: Senha da identidade
+    AuthTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT para acesso a APIs protegidas
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          format: int64
+          description: Tempo de expiracao em segundos
+    CriarUsuarioRequest:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          type: string
+          description: Role do usuario (exemplo MORADOR, FUNCIONARIO, ROLE_MORADOR)
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email

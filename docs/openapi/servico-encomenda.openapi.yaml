@@ -1,0 +1,208 @@
+openapi: 3.0.3
+info:
+  title: Servico Encomenda API
+  version: 1.0.0
+  description: |
+    API do servico de encomendas da portaria.
+    Permite registrar recebimento e baixa de retirada de encomendas.
+servers:
+  - url: http://localhost:8083
+    description: Ambiente local
+tags:
+  - name: Portaria
+    description: Operacoes de recebimento e retirada de encomendas
+security:
+  - bearerAuth: []
+paths:
+  /portaria/encomendas:
+    post:
+      tags: [Portaria]
+      summary: Registrar recebimento de encomenda
+      description: Registra uma encomenda recebida pela portaria para um morador.
+      operationId: receberEncomenda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceberEncomendaRequest'
+            examples:
+              recebimento:
+                value:
+                  nomeDestinatario: Joao da Silva
+                  apartamento: 101
+                  bloco: A
+                  descricao: Caixa media da loja X
+      responses:
+        '201':
+          description: Encomenda registrada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncomendaResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '403':
+          description: Sem permissao (requer ROLE_FUNCIONARIO)
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /portaria/encomendas/{id}/retirada:
+    post:
+      tags: [Portaria]
+      summary: Dar baixa na retirada da encomenda
+      description: |
+        Registra a retirada da encomenda na portaria.
+        A operacao tambem persiste explicitamente o nome de quem retirou.
+      operationId: baixarRetiradaEncomenda
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador da encomenda
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaixarEncomendaRetiradaRequest'
+            examples:
+              retirada:
+                value:
+                  retiradoPorNome: Joao da Silva
+      responses:
+        '200':
+          description: Baixa da retirada registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaixaEncomendaResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '403':
+          description: Sem permissao (requer ROLE_FUNCIONARIO)
+        '404':
+          description: Encomenda nao encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Encomenda em estado invalido para retirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ReceberEncomendaRequest:
+      type: object
+      required: [nomeDestinatario, apartamento, bloco, descricao]
+      properties:
+        nomeDestinatario:
+          type: string
+          description: Nome completo do destinatario da encomenda
+          minLength: 1
+        apartamento:
+          type: string
+          description: Numero do apartamento do destinatario
+          minLength: 1
+        bloco:
+          type: string
+          description: Bloco do apartamento do destinatario
+          minLength: 1
+        descricao:
+          type: string
+          description: Descricao da encomenda
+          minLength: 1
+    BaixarEncomendaRetiradaRequest:
+      type: object
+      required: [retiradoPorNome]
+      properties:
+        retiradoPorNome:
+          type: string
+          description: Nome de quem retirou a encomenda
+          minLength: 1
+    EncomendaResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nomeDestinatario:
+          type: string
+        apartamento:
+          type: string
+        bloco:
+          type: string
+        descricao:
+          type: string
+        recebidoPor:
+          type: string
+          description: Subject do usuario autenticado que registrou o recebimento
+          nullable: true
+        status:
+          $ref: '#/components/schemas/StatusEncomenda'
+        dataRecebimento:
+          type: string
+          format: date-time
+    BaixaEncomendaResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        status:
+          $ref: '#/components/schemas/StatusEncomenda'
+        dataRetirada:
+          type: string
+          format: date-time
+        retiradoPorNome:
+          type: string
+    StatusEncomenda:
+      type: string
+      enum: [RECEBIDA, RETIRADA]
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
