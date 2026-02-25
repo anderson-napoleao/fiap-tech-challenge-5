@@ -76,6 +76,54 @@ class UseCaseCommandValidationTest {
   }
 
   @Test
+  void processarEncomendaRecebidaPorUnidadeCommandDeveValidarCamposObrigatorios() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ProcessarEncomendaRecebidaPorUnidadeUseCase.Command(
+            null,
+            1L,
+            "Maria",
+            "101",
+            "A",
+            "Caixa"
+        )
+    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ProcessarEncomendaRecebidaPorUnidadeUseCase.Command(
+            "event-1",
+            0L,
+            "Maria",
+            "101",
+            "A",
+            "Caixa"
+        )
+    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ProcessarEncomendaRecebidaPorUnidadeUseCase.Command(
+            "event-1",
+            1L,
+            "Maria",
+            "",
+            "A",
+            "Caixa"
+        )
+    );
+
+    assertDoesNotThrow(
+        () -> new ProcessarEncomendaRecebidaPorUnidadeUseCase.Command(
+            "event-1",
+            1L,
+            "Maria",
+            "101",
+            "A",
+            "Caixa"
+        )
+    );
+  }
+
+  @Test
   void confirmarRecebimentoCommandDeveValidarCamposObrigatorios() {
     assertThrows(
         IllegalArgumentException.class,

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import br.com.condominio.servico.usuario.application.port.in.AtualizarMeuPerfilUseCase;
 import br.com.condominio.servico.usuario.application.port.in.CadastrarUsuarioUseCase;
+import br.com.condominio.servico.usuario.application.port.in.ListarMoradoresPorUnidadeUseCase;
 import br.com.condominio.servico.usuario.application.port.in.ObterMeuPerfilUseCase;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ class UseCaseContractTest {
     validarMetodoDeEntrada(CadastrarUsuarioUseCase.class);
     validarMetodoDeEntrada(AtualizarMeuPerfilUseCase.class);
     validarMetodoDeEntrada(ObterMeuPerfilUseCase.class);
+    validarMetodoDeEntrada(ListarMoradoresPorUnidadeUseCase.class);
   }
 
   private void validarMetodoDeEntrada(Class<?> useCaseInterface) {

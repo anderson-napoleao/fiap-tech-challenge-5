@@ -13,5 +13,7 @@ public interface NotificacaoRepositoryPort {
 
   Optional<Notificacao> buscarPorId(String notificacaoId);
 
+  boolean existePorEncomendaEMorador(String encomendaId, String moradorId);
+
   List<Notificacao> listarNaoConfirmadasPorMorador(String moradorId, int page, int size);
 }

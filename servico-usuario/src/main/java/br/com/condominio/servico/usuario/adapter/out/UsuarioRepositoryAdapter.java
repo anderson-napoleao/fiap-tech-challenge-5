@@ -3,8 +3,10 @@ package br.com.condominio.servico.usuario.adapter.out;
 import br.com.condominio.servico.usuario.application.exception.PersistenciaConflitoException;
 import br.com.condominio.servico.usuario.application.port.out.UsuarioRepositoryPort;
 import br.com.condominio.servico.usuario.domain.Usuario;
+import br.com.condominio.servico.usuario.domain.TipoUsuario;
 import br.com.condominio.servico.usuario.infrastructure.persistence.entity.UsuarioEntity;
 import br.com.condominio.servico.usuario.infrastructure.persistence.repository.SpringDataUsuarioRepository;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
@@ -35,6 +37,18 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
   @Override
   public Optional<Usuario> buscarPorIdentityId(String identityId) {
     return repository.findByIdentityId(identityId).map(this::toDomain);
+  }
+
+  @Override
+  public List<Usuario> listarMoradoresPorUnidade(String bloco, String apartamento) {
+    return repository.findByBlocoIgnoreCaseAndApartamentoIgnoreCaseAndTipo(
+            bloco,
+            apartamento,
+            TipoUsuario.MORADOR
+        )
+        .stream()
+        .map(this::toDomain)
+        .toList();
   }
 
   @Override

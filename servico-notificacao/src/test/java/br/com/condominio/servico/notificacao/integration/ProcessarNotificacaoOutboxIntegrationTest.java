@@ -73,7 +73,7 @@ class ProcessarNotificacaoOutboxIntegrationTest {
 
     List<OutboxEventEntity> events = outboxEventRepository.findByAggregateId(result.id());
     assertEquals(1, events.size());
-    assertTrue(events.getFirst().getPayload().contains("\"status\":\"PENDENTE\""));
+    assertTrue(events.getFirst().getPayload().contains("\"status\":\"ENVIADA\""));
     assertTrue(events.getFirst().getPayload().contains("\"encomendaId\":\"enc-100\""));
   }
 
@@ -121,5 +121,33 @@ class ProcessarNotificacaoOutboxIntegrationTest {
     assertEquals(first.id(), second.id());
     assertEquals(1, notificacaoRepository.count());
     assertEquals(1, outboxEventRepository.count());
+  }
+
+  @Test
+  void mesmoSourceEventIdParaMoradoresDiferentesDevePermitirUmaNotificacaoPorMorador() {
+    String sourceEventId = UUID.randomUUID().toString();
+
+    processarEncomendaRecebidaUseCase.executar(new ProcessarEncomendaRecebidaUseCase.Command(
+        "enc-103",
+        "morador-1",
+        CanalNotificacao.PUSH,
+        "device-token-1",
+        "Sua encomenda chegou na portaria",
+        sourceEventId,
+        UUID.randomUUID().toString()
+    ));
+
+    processarEncomendaRecebidaUseCase.executar(new ProcessarEncomendaRecebidaUseCase.Command(
+        "enc-103",
+        "morador-2",
+        CanalNotificacao.PUSH,
+        "device-token-2",
+        "Sua encomenda chegou na portaria",
+        sourceEventId,
+        UUID.randomUUID().toString()
+    ));
+
+    assertEquals(2, notificacaoRepository.count());
+    assertEquals(2, outboxEventRepository.count());
   }
 }

@@ -8,13 +8,20 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 
 /**
  * Entidade de persistencia mapeada para o banco de dados.
  */
 @Entity
-@Table(name = "notificacoes")
+@Table(
+    name = "notificacoes",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_notificacoes_source_event_morador",
+        columnNames = {"source_event_id", "morador_id"}
+    )
+)
 public class NotificacaoEntity {
 
   @Id
@@ -41,7 +48,7 @@ public class NotificacaoEntity {
   @Column(name = "status", nullable = false, length = 20)
   private StatusNotificacao status;
 
-  @Column(name = "source_event_id", nullable = false, length = 64, unique = true)
+  @Column(name = "source_event_id", nullable = false, length = 64)
   private String sourceEventId;
 
   @Column(name = "correlation_id", nullable = false, length = 64)

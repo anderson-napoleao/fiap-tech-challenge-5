@@ -12,7 +12,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface SpringDataNotificacaoRepository extends JpaRepository<NotificacaoEntity, String> {
 
-  Optional<NotificacaoEntity> findBySourceEventId(String sourceEventId);
+  Optional<NotificacaoEntity> findBySourceEventIdAndMoradorId(String sourceEventId, String moradorId);
+
+  boolean existsByEncomendaIdAndMoradorId(String encomendaId, String moradorId);
 
   Page<NotificacaoEntity> findByMoradorIdAndStatusNot(
       String moradorId,

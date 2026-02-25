@@ -1,4 +1,7 @@
 spring:
+  kafka:
+    listener:
+      auto-startup: false
   datasource:
     url: jdbc:tc:postgresql:16-alpine:///servico_notificacao_it
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver

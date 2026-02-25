@@ -1,6 +1,14 @@
 spring:
   application:
     name: servico-notificacao
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    consumer:
+      group-id: ${KAFKA_GROUP_ID:servico-notificacao}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   
   datasource:
     url: jdbc:postgresql://postgres-notificacao:5432/condominio_notificacao
@@ -46,3 +54,18 @@ management:
   tracing:
     sampling:
       probability: 1.0
+
+identity:
+  base-url: ${SERVICO_IDENTIDADE_URL:http://servico-identidade:8081}
+  service-username: ${IDENTITY_SERVICE_USERNAME:admin}
+  service-password: ${IDENTITY_SERVICE_PASSWORD:admin}
+
+usuario:
+  base-url: ${SERVICO_USUARIO_URL:http://servico-usuario:8082}
+
+app:
+  kafka:
+    topics:
+      encomenda-recebida: ${TOPICO_ENCOMENDA_RECEBIDA:encomenda.recebida}
+    consumer:
+      group-id: ${KAFKA_GROUP_ID:servico-notificacao}

@@ -2,11 +2,14 @@ package br.com.condominio.servico.notificacao.config;
 
 import br.com.condominio.servico.notificacao.application.port.in.ConfirmarRecebimentoNotificacaoUseCase;
 import br.com.condominio.servico.notificacao.application.port.in.ListarNotificacoesPendentesUseCase;
+import br.com.condominio.servico.notificacao.application.port.in.ProcessarEncomendaRecebidaPorUnidadeUseCase;
 import br.com.condominio.servico.notificacao.application.port.in.ProcessarEncomendaRecebidaUseCase;
+import br.com.condominio.servico.notificacao.application.port.out.MoradorDirectoryPort;
 import br.com.condominio.servico.notificacao.application.port.out.NotificacaoRepositoryPort;
 import br.com.condominio.servico.notificacao.application.port.out.RegistrarNotificacaoComOutboxPort;
 import br.com.condominio.servico.notificacao.application.service.ConfirmarRecebimentoNotificacaoService;
 import br.com.condominio.servico.notificacao.application.service.ListarNotificacoesPendentesService;
+import br.com.condominio.servico.notificacao.application.service.ProcessarEncomendaRecebidaPorUnidadeService;
 import br.com.condominio.servico.notificacao.application.service.ProcessarEncomendaRecebidaService;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +32,17 @@ public class BeansConfig {
       Clock appClock
   ) {
     return new ProcessarEncomendaRecebidaService(registrarNotificacaoComOutboxPort, appClock);
+  }
+
+  @Bean
+  public ProcessarEncomendaRecebidaPorUnidadeUseCase processarEncomendaRecebidaPorUnidadeUseCase(
+      MoradorDirectoryPort moradorDirectoryPort,
+      ProcessarEncomendaRecebidaUseCase processarEncomendaRecebidaUseCase
+  ) {
+    return new ProcessarEncomendaRecebidaPorUnidadeService(
+        moradorDirectoryPort,
+        processarEncomendaRecebidaUseCase
+    );
   }
 
   @Bean

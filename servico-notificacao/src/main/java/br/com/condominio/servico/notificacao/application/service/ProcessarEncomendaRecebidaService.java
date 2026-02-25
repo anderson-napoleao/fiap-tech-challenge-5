@@ -39,6 +39,7 @@ public class ProcessarEncomendaRecebidaService implements ProcessarEncomendaRece
         command.correlationId(),
         clock.instant()
     );
+    notificacao.marcarEnviada(clock.instant());
 
     Notificacao salva = registrarNotificacaoComOutboxPort.registrar(notificacao);
 

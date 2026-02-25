@@ -50,7 +50,10 @@ public class RegistrarNotificacaoComOutboxAdapter implements RegistrarNotificaca
     }
 
     // Reprocessamento do mesmo evento de entrada deve ser idempotente.
-    NotificacaoEntity existente = notificacaoRepository.findBySourceEventId(notificacao.sourceEventId()).orElse(null);
+    NotificacaoEntity existente = notificacaoRepository.findBySourceEventIdAndMoradorId(
+        notificacao.sourceEventId(),
+        notificacao.moradorId()
+    ).orElse(null);
     if (existente != null) {
       return toDomain(existente);
     }
@@ -80,7 +83,10 @@ public class RegistrarNotificacaoComOutboxAdapter implements RegistrarNotificaca
     try {
       salva = notificacaoRepository.save(entity);
     } catch (DataIntegrityViolationException exception) {
-      NotificacaoEntity duplicada = notificacaoRepository.findBySourceEventId(notificacao.sourceEventId())
+      NotificacaoEntity duplicada = notificacaoRepository.findBySourceEventIdAndMoradorId(
+              notificacao.sourceEventId(),
+              notificacao.moradorId()
+          )
           .orElseThrow(() -> exception);
       return toDomain(duplicada);
     }

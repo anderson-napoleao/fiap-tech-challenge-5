@@ -49,4 +49,18 @@ class UseCaseCommandValidationTest {
     assertThrows(IllegalArgumentException.class, () -> new ObterMeuPerfilUseCase.Command(""));
     assertDoesNotThrow(() -> new ObterMeuPerfilUseCase.Command("id-123"));
   }
+
+  @Test
+  void listarMoradoresPorUnidadeCommandDeveValidarCamposObrigatorios() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ListarMoradoresPorUnidadeUseCase.Command(null, "101")
+    );
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ListarMoradoresPorUnidadeUseCase.Command("A", " ")
+    );
+
+    assertDoesNotThrow(() -> new ListarMoradoresPorUnidadeUseCase.Command("A", "101"));
+  }
 }

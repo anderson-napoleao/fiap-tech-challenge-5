@@ -6,13 +6,14 @@ CREATE TABLE notificacoes (
   destino VARCHAR(255) NOT NULL,
   mensagem VARCHAR(1000) NOT NULL,
   status VARCHAR(20) NOT NULL,
-  source_event_id VARCHAR(64) NOT NULL UNIQUE,
+  source_event_id VARCHAR(64) NOT NULL,
   correlation_id VARCHAR(64) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
   sent_at TIMESTAMP WITH TIME ZONE,
   confirmed_at TIMESTAMP WITH TIME ZONE,
   failed_at TIMESTAMP WITH TIME ZONE,
-  failure_reason VARCHAR(500)
+  failure_reason VARCHAR(500),
+  CONSTRAINT uk_notificacoes_source_event_morador UNIQUE (source_event_id, morador_id)
 );
 
 CREATE INDEX idx_notificacoes_morador_status_created_at ON notificacoes(morador_id, status, created_at);

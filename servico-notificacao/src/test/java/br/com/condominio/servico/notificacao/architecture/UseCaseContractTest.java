@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import br.com.condominio.servico.notificacao.application.port.in.ConfirmarRecebimentoNotificacaoUseCase;
 import br.com.condominio.servico.notificacao.application.port.in.ListarNotificacoesPendentesUseCase;
+import br.com.condominio.servico.notificacao.application.port.in.ProcessarEncomendaRecebidaPorUnidadeUseCase;
 import br.com.condominio.servico.notificacao.application.port.in.ProcessarEncomendaRecebidaUseCase;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ class UseCaseContractTest {
   @Test
   void useCasesDevemReceberApenasCommandComoEntrada() {
     validarMetodoDeEntrada(ProcessarEncomendaRecebidaUseCase.class);
+    validarMetodoDeEntrada(ProcessarEncomendaRecebidaPorUnidadeUseCase.class);
     validarMetodoDeEntrada(ConfirmarRecebimentoNotificacaoUseCase.class);
     validarMetodoDeEntrada(ListarNotificacoesPendentesUseCase.class);
   }
