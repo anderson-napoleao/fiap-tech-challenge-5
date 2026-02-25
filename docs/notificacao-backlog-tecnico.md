@@ -195,6 +195,131 @@ Implementar no `servico-notificacao` o fluxo de notificacao de chegada de encome
   - `application` sem dependencias de framework;
   - build falha se houver quebra de fronteira arquitetural.
 
+## Fase 6 - API GraphQL de Historico (Sem NoSQL)
+
+### NOT-501 - Habilitar runtime GraphQL no servico-notificacao
+
+- Modulo: `servico-notificacao`
+- Entrega: suporte GraphQL no modulo para consultas de historico por morador.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/pom.xml`, `servico-notificacao/src/main/resources/application.yml`, `servico-notificacao/src/main/resources/graphql/`
+- Criterios de aceite:
+  - endpoint `POST /graphql` responde consultas validas;
+  - servico continua subindo com `actuator/health` e seguranca ativa;
+  - camada `application` permanece sem dependencia de framework.
+
+### NOT-502 - Implementar UseCase de consulta de historico de notificacoes
+
+- Modulo: `servico-notificacao`
+- Entrega: porta de entrada + servico de aplicacao para consultar historico por morador autenticado.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/application/port/in/ConsultarHistoricoNotificacoesUseCase.java`, `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/application/service/ConsultarHistoricoNotificacoesService.java`
+- Criterios de aceite:
+  - `Command` valida `moradorId`, paginacao e filtros simples no construtor;
+  - `UseCase` recebe exatamente um parametro `Command`;
+  - retorno inclui estado atual e timestamps (`criadaEm`, `enviadaEm`, `falhaEm`, `confirmadaEm`).
+
+### NOT-503 - Implementar porta de consulta e adaptador de persistencia para historico
+
+- Modulo: `servico-notificacao`
+- Entrega: consulta paginada por morador, com filtro opcional por `encomendaId`.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/application/port/out/NotificacaoHistoricoRepositoryPort.java`, `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/adapter/out/NotificacaoHistoricoRepositoryAdapter.java`, `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/infrastructure/persistence/repository/SpringDataNotificacaoRepository.java`
+- Criterios de aceite:
+  - consulta retorna somente notificacoes do morador informado;
+  - ordenacao por data de criacao decrescente;
+  - paginacao suporta `page` e `size`.
+
+### NOT-504 - Expor query GraphQL para historico de notificacoes do morador
+
+- Modulo: `servico-notificacao`
+- Entrega: query GraphQL `historicoNotificacoes` na camada de entrada.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/adapter/in/graphql/`, `servico-notificacao/src/main/resources/graphql/notificacao-historico.graphqls`
+- Criterios de aceite:
+  - query usa `moradorId` derivado do token JWT autenticado;
+  - resposta contem `id`, `encomendaId`, `status`, `criadaEm`, `enviadaEm`, `falhaEm`, `confirmadaEm`, `motivoFalha`;
+  - filtro por `encomendaId` e paginacao disponiveis.
+
+### NOT-505 - Garantir seguranca de autorizacao no endpoint GraphQL
+
+- Modulo: `servico-notificacao`
+- Entrega: regra de seguranca para `/graphql` com escopo de morador.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/infrastructure/security/SecurityConfig.java`
+- Criterios de aceite:
+  - request sem token retorna `401`;
+  - request autenticada sem `ROLE_MORADOR` retorna `403`;
+  - request com `ROLE_MORADOR` acessa somente dados do proprio morador.
+
+### NOT-506 - Cobertura de testes de GraphQL (contrato, seguranca e consulta)
+
+- Modulo: `servico-notificacao`
+- Entrega: testes para query GraphQL de historico, validacoes e autorizacao.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/test/java/br/com/condominio/servico/notificacao/adapter/in/graphql/`, `servico-notificacao/src/test/java/br/com/condominio/servico/notificacao/application/port/in/UseCaseCommandValidationTest.java`, `servico-notificacao/src/test/java/br/com/condominio/servico/notificacao/architecture/UseCaseContractTest.java`
+- Criterios de aceite:
+  - consulta valida retorna dados esperados;
+  - erros de validacao retornam falha adequada;
+  - cenarios `401` e `403` cobertos por testes.
+
+## Fase 7 - Evolucao de Historico Completo (Roadmap Futuro)
+
+### NOT-601 - Criar trilha append-only de mudancas de status em SQL
+
+- Modulo: `servico-notificacao`
+- Entrega: tabela historica de transicoes de status (`notificacao_status_historico`).
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/resources/db/migration/`
+- Criterios de aceite:
+  - cada mudanca de estado gera novo registro historico imutavel;
+  - registros contem `notificacaoId`, `status`, `ocorridoEm`, `motivo` e metadados de correlacao;
+  - indice para consulta por `notificacaoId` e por `moradorId + ocorridoEm`.
+
+### NOT-602 - Registrar historico de transicoes na mesma transacao da notificacao
+
+- Modulo: `servico-notificacao`
+- Entrega: persistencia atomica de `notificacoes + historico_status`.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/adapter/out/`, `servico-notificacao/src/test/java/br/com/condominio/servico/notificacao/integration/`
+- Criterios de aceite:
+  - confirmacao, envio e falha gravam eventos de historico;
+  - em falha transacional nao persiste notificacao sem historico;
+  - operacoes idempotentes nao duplicam transicoes invalidas.
+
+### NOT-603 - Evoluir query GraphQL para timeline completa por notificacao/encomenda
+
+- Modulo: `servico-notificacao`
+- Entrega: retorno de timeline completa de transicoes, nao apenas snapshot atual.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/resources/graphql/notificacao-historico.graphqls`, `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/adapter/in/graphql/`
+- Criterios de aceite:
+  - query retorna sequencia ordenada de transicoes por notificacao;
+  - suporte a agregacao por `encomendaId`;
+  - compatibilidade retroativa da query principal.
+
+### NOT-604 - Publicar eventos de mudanca de status via outbox (opcional)
+
+- Modulo: `servico-notificacao`
+- Entrega: eventos `notificacao.enviada`, `notificacao.falhou`, `notificacao.confirmada` no outbox.
+- Status: planejado em 2026-02-25
+- Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/adapter/out/RegistrarNotificacaoComOutboxAdapter.java`, `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/application/event/`
+- Criterios de aceite:
+  - contratos versionados e payload consistente com correlacao;
+  - publicacao na mesma semantica `at-least-once`;
+  - consumidores documentados com requisito de idempotencia.
+
+### NOT-605 - Avaliar read model NoSQL para historico (opcional por escala)
+
+- Modulo: arquitetura da solucao
+- Entrega: decisao tecnica documentada para manter SQL ou adicionar NoSQL para leitura.
+- Status: planejado em 2026-02-25
+- Evidencia: `docs/notificacao-arquitetura-historico.md` (ou ADR equivalente)
+- Criterios de aceite:
+  - decisao considera volume, latencia, custo operacional e consistencia eventual;
+  - plano de migracao definido quando NoSQL for adotado;
+  - sem regressao de seguranca/autorizacao na consulta de historico.
+
 ## Ordem Recomendada de Execucao
 
 1. NOT-001
@@ -212,6 +337,17 @@ Implementar no `servico-notificacao` o fluxo de notificacao de chegada de encome
 13. NOT-402
 14. NOT-403
 15. NOT-404
+16. NOT-501
+17. NOT-502
+18. NOT-503
+19. NOT-504
+20. NOT-505
+21. NOT-506
+22. NOT-601
+23. NOT-602
+24. NOT-603
+25. NOT-604
+26. NOT-605
 
 ## Definicao de Pronto (DoD)
 
@@ -222,4 +358,6 @@ Implementar no `servico-notificacao` o fluxo de notificacao de chegada de encome
 - eventos de saida publicados via outbox para canal de saida;
 - listagem de nao confirmadas do morador autenticado funcionando;
 - confirmacao de notificacao funcionando de forma idempotente;
-- fluxo operacional de mensageria documentado.
+- fluxo operacional de mensageria documentado;
+- query GraphQL de historico do morador autenticado funcionando (fase sem NoSQL);
+- roadmap de historico completo (append-only e opcao NoSQL) documentado.

@@ -1,4 +1,4 @@
-package br.com.condominio.identidade.infrastructure.observability;
+package br.com.condominio.servico.notificacao.infrastructure.observability;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
