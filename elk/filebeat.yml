@@ -7,8 +7,9 @@ filebeat.inputs:
         host: "unix:///var/run/docker.sock"
     - decode_json_fields:
         fields: ["message"]
-        target: ""
-        overwrite_keys: true
+        target: "app"
+        overwrite_keys: false
+        add_error_key: true
 
 output.logstash:
   hosts: ["logstash:5044"]
