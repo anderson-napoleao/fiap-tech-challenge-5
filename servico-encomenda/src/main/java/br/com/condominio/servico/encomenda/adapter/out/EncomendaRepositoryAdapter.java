@@ -10,9 +10,10 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.Optional;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,11 +55,13 @@ public class EncomendaRepositoryAdapter implements EncomendaRepositoryPort {
       throw new IllegalArgumentException("Size invalido");
     }
 
-    Page<EncomendaEntity> page = encomendaRepository.findByFiltros(
-        normalizarFiltro(filtro.apartamento()),
-        normalizarFiltro(filtro.bloco()),
-        inicioDoDiaUtc(filtro.data()),
-        fimDoDiaUtc(filtro.data()),
+    Page<EncomendaEntity> page = encomendaRepository.findAll(
+        criarSpecification(
+            normalizarFiltro(filtro.apartamento()),
+            normalizarFiltro(filtro.bloco()),
+            inicioDoDiaUtc(filtro.data()),
+            fimDoDiaUtc(filtro.data())
+        ),
         PageRequest.of(filtro.page(), filtro.size(), Sort.by(Sort.Direction.DESC, "dataRecebimento"))
     );
 
@@ -122,5 +125,37 @@ public class EncomendaRepositoryAdapter implements EncomendaRepositoryPort {
       return null;
     }
     return data.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+  }
+
+  private Specification<EncomendaEntity> criarSpecification(
+      String apartamento,
+      String bloco,
+      Instant dataInicio,
+      Instant dataFim
+  ) {
+    Specification<EncomendaEntity> specification = Specification.where(null);
+
+    if (apartamento != null) {
+      specification = specification.and((root, query, cb) ->
+          cb.equal(cb.upper(root.get("apartamento")), apartamento)
+      );
+    }
+    if (bloco != null) {
+      specification = specification.and((root, query, cb) ->
+          cb.equal(cb.upper(root.get("bloco")), bloco)
+      );
+    }
+    if (dataInicio != null) {
+      specification = specification.and((root, query, cb) ->
+          cb.greaterThanOrEqualTo(root.get("dataRecebimento"), dataInicio)
+      );
+    }
+    if (dataFim != null) {
+      specification = specification.and((root, query, cb) ->
+          cb.lessThan(root.get("dataRecebimento"), dataFim)
+      );
+    }
+
+    return specification;
   }
 }
