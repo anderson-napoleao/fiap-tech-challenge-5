@@ -123,6 +123,9 @@
         <version>${spring-boot.version}</version>
         <executions>
           <execution>
+            <configuration>
+              <classifier>exec</classifier>
+            </configuration>
             <goals>
               <goal>repackage</goal>
             </goals>
