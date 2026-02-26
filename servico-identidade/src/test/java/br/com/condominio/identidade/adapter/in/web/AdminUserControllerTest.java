@@ -58,4 +58,27 @@ class AdminUserControllerTest {
             .header("Authorization", basicAuth("admin", "admin")))
         .andExpect(status().isNoContent());
   }
+
+  @Test
+  void deveNegarAcessoAdminParaUsuarioAutenticadoSemRoleAdmin() throws Exception {
+    String emailUsuarioComum = "usuario.comum." + System.nanoTime() + "@teste.com";
+
+    mockMvc
+        .perform(post("/admin/users")
+            .header("Authorization", basicAuth("admin", "admin"))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {
+                  "email": "%s",
+                  "password": "123456",
+                  "role": "USER"
+                }
+                """.formatted(emailUsuarioComum)))
+        .andExpect(status().isCreated());
+
+    mockMvc
+        .perform(delete("/admin/users/id-qualquer")
+            .header("Authorization", basicAuth(emailUsuarioComum, "123456")))
+        .andExpect(status().isForbidden());
+  }
 }
