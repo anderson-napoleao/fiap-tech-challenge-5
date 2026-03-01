@@ -1,6 +1,7 @@
 package br.com.condominio.servico.usuario.architecture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import br.com.condominio.servico.usuario.application.port.in.AtualizarMeuPerfilUseCase;
 import br.com.condominio.servico.usuario.application.port.in.CadastrarUsuarioUseCase;
@@ -21,10 +22,16 @@ class UseCaseContractTest {
 
   private void validarMetodoDeEntrada(Class<?> useCaseInterface) {
     for (Method method : useCaseInterface.getDeclaredMethods()) {
+      Class<?> commandType = method.getParameterTypes()[0];
       assertEquals(1, method.getParameterCount(), useCaseInterface.getSimpleName() + "." + method.getName());
       assertEquals(
           "Command",
-          method.getParameterTypes()[0].getSimpleName(),
+          commandType.getSimpleName(),
+          useCaseInterface.getSimpleName() + "." + method.getName()
+      );
+      assertSame(
+          useCaseInterface,
+          commandType.getEnclosingClass(),
           useCaseInterface.getSimpleName() + "." + method.getName()
       );
     }

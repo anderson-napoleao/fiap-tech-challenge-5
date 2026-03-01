@@ -523,11 +523,19 @@ Quando usar:
 mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoCadastroUsuarioCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-O que esse teste valida:
+```bash
+mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoEncomendaNotificacaoRetiradaCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+O que os testes validam:
 
 - cadastro em `servico-usuario`;
 - autenticacao em `servico-identidade`;
 - consulta autenticada de perfil em `servico-usuario`.
+- recebimento de encomenda por funcionario (`servico-encomenda`);
+- consumo de evento `encomenda.recebida` no `servico-notificacao`;
+- confirmacao de notificacao por morador e bloqueio de confirmacao por perfil indevido;
+- baixa de retirada da encomenda e conferencia de pendencias.
 
 ### 8.5 Quality gate
 

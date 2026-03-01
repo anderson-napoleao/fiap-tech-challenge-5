@@ -75,7 +75,7 @@
               <rulesets>
                 <ruleset>${maven.multiModuleProjectDirectory}/config/pmd/ruleset.xml</ruleset>
               </rulesets>
-              <failOnViolation>false</failOnViolation>
+              <failOnViolation>true</failOnViolation>
             </configuration>
             <executions>
               <execution>
@@ -93,7 +93,7 @@
             <artifactId>spotbugs-maven-plugin</artifactId>
             <version>${spotbugs-maven-plugin.version}</version>
             <configuration>
-              <failOnError>false</failOnError>
+              <failOnError>true</failOnError>
               <effort>Max</effort>
               <threshold>High</threshold>
             </configuration>
@@ -134,7 +134,7 @@
             <artifactId>dependency-check-maven</artifactId>
             <version>${dependency-check-maven.version}</version>
             <configuration>
-              <failBuildOnCVSS>11</failBuildOnCVSS>
+              <failBuildOnCVSS>9</failBuildOnCVSS>
               <skipTestScope>true</skipTestScope>
             </configuration>
             <executions>
