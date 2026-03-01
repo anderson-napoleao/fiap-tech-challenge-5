@@ -11,6 +11,8 @@ servers:
 tags:
   - name: Usuarios
     description: Operacoes de cadastro e perfil
+  - name: Interno
+    description: Operacoes internas entre servicos
 paths:
   /users:
     post:
@@ -138,6 +140,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /interno/usuarios/moradores:
+    get:
+      tags: [Interno]
+      summary: Listar moradores por unidade (interno)
+      description: Lista moradores de uma unidade para integracao entre servicos.
+      operationId: listarMoradoresPorUnidade
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bloco
+          in: query
+          required: true
+          description: Bloco da unidade
+          schema:
+            type: string
+        - name: apartamento
+          in: query
+          required: true
+          description: Numero do apartamento
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Moradores encontrados para a unidade
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MoradorUnidadeResponse'
+        '400':
+          description: Requisicao invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Nao autenticado
+        '403':
+          description: Sem permissao (requer ROLE_ADMIN)
+        '500':
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -204,6 +252,16 @@ components:
           type: string
         bloco:
           type: string
+    MoradorUnidadeResponse:
+      type: object
+      properties:
+        identityId:
+          type: string
+        nomeCompleto:
+          type: string
+        email:
+          type: string
+          format: email
     TipoUsuario:
       type: string
       enum: [MORADOR, FUNCIONARIO]

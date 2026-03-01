@@ -78,6 +78,8 @@ paths:
           description: Requisicao invalida
         '401':
           description: Nao autenticado (Basic auth)
+        '403':
+          description: Sem permissao (requer ROLE_ADMIN)
   /admin/users/{id}:
     delete:
       tags: [Admin]
@@ -98,6 +100,8 @@ paths:
           description: Usuario removido
         '401':
           description: Nao autenticado (Basic auth)
+        '403':
+          description: Sem permissao (requer ROLE_ADMIN)
   /admin/users/{id}/disable:
     patch:
       tags: [Admin]
@@ -118,6 +122,8 @@ paths:
           description: Usuario desabilitado
         '401':
           description: Nao autenticado (Basic auth)
+        '403':
+          description: Sem permissao (requer ROLE_ADMIN)
 components:
   securitySchemes:
     basicAuth:
