@@ -110,9 +110,9 @@ Por que existe:
 Principais endpoints:
 
 - `POST /auth/token`
-- `POST /admin/users`
-- `PATCH /admin/users/{id}/disable`
-- `DELETE /admin/users/{id}`
+- `POST /admin/users` (requer `ROLE_ADMIN`; pode retornar `403`)
+- `PATCH /admin/users/{id}/disable` (requer `ROLE_ADMIN`; pode retornar `403`)
+- `DELETE /admin/users/{id}` (requer `ROLE_ADMIN`; pode retornar `403`)
 
 Persistencia:
 
@@ -137,6 +137,7 @@ Principais endpoints:
 - `POST /users`
 - `GET /users/me`
 - `PUT /users/me`
+- `GET /interno/usuarios/moradores?bloco={bloco}&apartamento={apartamento}` (interno; requer `ROLE_ADMIN`)
 
 Persistencia:
 
@@ -513,6 +514,12 @@ Ativa cenarios que sobem infraestrutura temporaria:
 mvn test -Dtestcontainers.enabled=true
 ```
 
+PowerShell (Windows):
+
+```powershell
+mvn test "-Dtestcontainers.enabled=true"
+```
+
 Quando usar:
 
 - validacao mais proxima de producao (banco/container real).
@@ -523,8 +530,20 @@ Quando usar:
 mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoCadastroUsuarioCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
+PowerShell (Windows):
+
+```powershell
+mvn -pl tests-integracao-sistema -am test "-Dtestcontainers.enabled=true" "-Dtest=FluxoCadastroUsuarioCrossModuleTest" "-Dsurefire.failIfNoSpecifiedTests=false"
+```
+
 ```bash
 mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoEncomendaNotificacaoRetiradaCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+PowerShell (Windows):
+
+```powershell
+mvn -pl tests-integracao-sistema -am test "-Dtestcontainers.enabled=true" "-Dtest=FluxoEncomendaNotificacaoRetiradaCrossModuleTest" "-Dsurefire.failIfNoSpecifiedTests=false"
 ```
 
 O que os testes validam:
@@ -679,7 +698,6 @@ curl http://localhost:8085/connectors/notificacao-outbox-connector/status
 - Docker: `DOCKER.md`
 - OpenAPI: `docs/openapi`
 - JavaDoc (portal): `http://localhost:8090`
-- Readme com estrutura de prints: `README-com-prints.md`
 
 ## 14. Encerramento
 
