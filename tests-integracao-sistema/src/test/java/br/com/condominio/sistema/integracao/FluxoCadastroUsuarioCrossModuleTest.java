@@ -8,29 +8,27 @@ import static org.hamcrest.Matchers.blankOrNullString;
 import br.com.condominio.identidade.ServicoIdentidadeApplication;
 import br.com.condominio.servico.usuario.ServicoUsuarioApplication;
 import io.restassured.http.ContentType;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
 @EnabledIfSystemProperty(named = "testcontainers.enabled", matches = "true")
 class FluxoCadastroUsuarioCrossModuleTest {
 
-  @Container
   static PostgreSQLContainer<?> identidadeDb = new PostgreSQLContainer<>("postgres:16-alpine")
       .withDatabaseName("condominio_identidade")
       .withUsername("postgres")
       .withPassword("postgres");
 
-  @Container
   static PostgreSQLContainer<?> usuarioDb = new PostgreSQLContainer<>("postgres:16-alpine")
       .withDatabaseName("condominio_usuario")
       .withUsername("postgres")
@@ -43,6 +41,8 @@ class FluxoCadastroUsuarioCrossModuleTest {
 
   @BeforeAll
   static void startApplications() {
+    Assumptions.assumeTrue(isDockerAvailable(), "Docker indisponivel para Testcontainers");
+
     identidadeDb.start();
     usuarioDb.start();
 
@@ -58,7 +58,7 @@ class FluxoCadastroUsuarioCrossModuleTest {
             Map.entry("spring.jpa.hibernate.ddl-auto", "validate"),
             Map.entry("spring.jpa.open-in-view", "false"),
             Map.entry("spring.flyway.enabled", "true"),
-            Map.entry("spring.flyway.locations", "classpath:db/migration"),
+            Map.entry("spring.flyway.locations", migrationLocation("servico-identidade")),
             Map.entry("security.jwt.secret", "condominio-jwt-secret-local-2026-seguro"),
             Map.entry("security.jwt.issuer", "servico-identidade"),
             Map.entry("security.jwt.expires-seconds", "3600"),
@@ -80,7 +80,7 @@ class FluxoCadastroUsuarioCrossModuleTest {
             Map.entry("spring.jpa.hibernate.ddl-auto", "validate"),
             Map.entry("spring.jpa.open-in-view", "false"),
             Map.entry("spring.flyway.enabled", "true"),
-            Map.entry("spring.flyway.locations", "classpath:db/migration"),
+            Map.entry("spring.flyway.locations", migrationLocation("servico-usuario")),
             Map.entry("security.jwt.secret", "condominio-jwt-secret-local-2026-seguro"),
             Map.entry("security.jwt.issuer", "servico-identidade"),
             Map.entry("identity.base-url", "http://localhost:" + identidadePort),
@@ -158,5 +158,20 @@ class FluxoCadastroUsuarioCrossModuleTest {
 
   private static int webServerPort(ConfigurableApplicationContext context) {
     return ((ServletWebServerApplicationContext) context).getWebServer().getPort();
+  }
+
+  private static String migrationLocation(String moduleName) {
+    Path migrationPath = Path.of("..", moduleName, "src", "main", "resources", "db", "migration")
+        .toAbsolutePath()
+        .normalize();
+    return "filesystem:" + migrationPath.toString().replace("\\", "/");
+  }
+
+  private static boolean isDockerAvailable() {
+    try {
+      return DockerClientFactory.instance().isDockerAvailable();
+    } catch (RuntimeException exception) {
+      return false;
+    }
   }
 }

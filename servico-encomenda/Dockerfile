@@ -22,8 +22,8 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy jar from build stage
-COPY --from=builder /app/servico-encomenda/target/*.jar app.jar
+# Copy executable jar from build stage
+COPY --from=builder /app/servico-encomenda/target/*-exec.jar app.jar
 
 # Create non-root user
 RUN addgroup --system spring && adduser --system spring --ingroup spring

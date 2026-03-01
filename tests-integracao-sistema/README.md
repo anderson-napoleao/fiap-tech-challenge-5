@@ -13,12 +13,16 @@ Cenário atual coberto:
 - cadastro de usuário no `servico-usuario`
 - autenticação no `servico-identidade`
 - consulta de perfil autenticado no `servico-usuario`
+- recebimento de encomenda no `servico-encomenda` por funcionário
+- consumo de evento `encomenda.recebida` no `servico-notificacao`
+- listagem e confirmação de notificação por morador
+- baixa de retirada da encomenda no `servico-encomenda`
 
 ## Tecnologias e ferramentas
 
 - JUnit 5
 - RestAssured
-- Testcontainers (PostgreSQL)
+- Testcontainers (PostgreSQL e Kafka)
 - Spring Boot Test
 
 ## Papel arquitetônico
@@ -48,4 +52,12 @@ Com Testcontainers habilitado:
 
 ```powershell
 mvn -pl tests-integracao-sistema -am test '-Dtestcontainers.enabled=true' -Dtest=FluxoCadastroUsuarioCrossModuleTest '-Dsurefire.failIfNoSpecifiedTests=false'
+```
+
+Observacao: os testes sao automaticamente marcados como `skipped` quando o Docker nao estiver disponivel no ambiente.
+
+Fluxo ponta a ponta encomenda/notificação/retirada:
+
+```powershell
+mvn -pl tests-integracao-sistema -am test '-Dtestcontainers.enabled=true' -Dtest=FluxoEncomendaNotificacaoRetiradaCrossModuleTest '-Dsurefire.failIfNoSpecifiedTests=false'
 ```
