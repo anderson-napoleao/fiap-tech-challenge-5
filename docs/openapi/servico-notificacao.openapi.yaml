@@ -77,7 +77,9 @@ paths:
     post:
       tags: [Morador]
       summary: Confirmar recebimento de notificacao
-      description: Confirma que o morador recebeu/cientificou a notificacao.
+      description: >
+        Confirma que o morador recebeu/cientificou a notificacao.
+        A autorizacao e por ownership da notificacao: o `sub` do JWT deve ser o mesmo `moradorId` da notificacao.
       operationId: confirmarNotificacao
       parameters:
         - name: id
@@ -102,7 +104,7 @@ paths:
         '401':
           description: Nao autenticado
         '403':
-          description: Sem permissao (requer ROLE_MORADOR)
+          description: Sem permissao (requer ROLE_MORADOR e ownership da notificacao)
           content:
             application/json:
               schema:

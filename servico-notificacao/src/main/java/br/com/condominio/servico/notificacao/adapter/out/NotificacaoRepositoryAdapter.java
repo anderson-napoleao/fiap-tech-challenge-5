@@ -49,17 +49,6 @@ public class NotificacaoRepositoryAdapter implements NotificacaoRepositoryPort {
   }
 
   @Override
-  public boolean existePorEncomendaEMorador(String encomendaId, String moradorId) {
-    if (encomendaId == null || encomendaId.isBlank()) {
-      throw new IllegalArgumentException("Encomenda obrigatoria");
-    }
-    if (moradorId == null || moradorId.isBlank()) {
-      throw new IllegalArgumentException("Morador obrigatorio");
-    }
-    return notificacaoRepository.existsByEncomendaIdAndMoradorId(encomendaId, moradorId);
-  }
-
-  @Override
   public List<Notificacao> listarNaoConfirmadasPorMorador(String moradorId, int page, int size) {
     if (moradorId == null || moradorId.isBlank()) {
       throw new IllegalArgumentException("Morador obrigatorio");

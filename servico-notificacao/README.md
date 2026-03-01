@@ -16,6 +16,11 @@ Responsabilidades:
 - `POST /morador/notificacoes/{id}/confirmacao` (`ROLE_MORADOR`)
 - `GET /actuator/health`
 
+Regra de autorizacao da confirmacao:
+
+- a confirmacao e autorizada por ownership da notificacao (`jwt.sub == notificacao.moradorId`);
+- `encomendaId` nao e usado para autorizar confirmacao.
+
 ## Stack
 
 - Java 21
@@ -42,7 +47,10 @@ Qualidade arquitetural protegida por ArchUnit.
 2. Segurança por perfil.
 - Solução: endpoints de morador protegidos por `ROLE_MORADOR`.
 
-3. Auditoria operacional.
+3. Autorizacao correta da confirmacao.
+- Solucao: validacao por ownership da notificacao (`notificacaoId` + `jwt.sub`), sem permissao cruzada por encomenda.
+
+4. Auditoria operacional.
 - Solução: logs estruturados com contexto e tracing.
 
 ## Execução

@@ -48,10 +48,9 @@ class ConfirmarRecebimentoNotificacaoServiceTest {
   }
 
   @Test
-  void deveRetornarAcessoNegadoQuandoMoradorNaoPertenceAoContextoDaEncomenda() {
+  void deveRetornarAcessoNegadoQuandoNotificacaoForDeOutroMorador() {
     Notificacao notificacao = criarNotificacaoEnviada("not-1", "enc-1", "morador-2");
     when(notificacaoRepositoryPort.buscarPorId("not-1")).thenReturn(Optional.of(notificacao));
-    when(notificacaoRepositoryPort.existePorEncomendaEMorador("enc-1", "morador-1")).thenReturn(false);
 
     assertThrows(
         AcessoNegadoException.class,
@@ -60,10 +59,9 @@ class ConfirmarRecebimentoNotificacaoServiceTest {
   }
 
   @Test
-  void devePermitirConfirmacaoPorOutroMoradorDaMesmaEncomenda() {
-    Notificacao notificacao = criarNotificacaoEnviada("not-1", "enc-1", "morador-2");
+  void deveConfirmarQuandoMoradorAutenticadoForDonoDaNotificacao() {
+    Notificacao notificacao = criarNotificacaoEnviada("not-1", "enc-1", "morador-1");
     when(notificacaoRepositoryPort.buscarPorId("not-1")).thenReturn(Optional.of(notificacao));
-    when(notificacaoRepositoryPort.existePorEncomendaEMorador("enc-1", "morador-1")).thenReturn(true);
     when(notificacaoRepositoryPort.salvar(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
     ConfirmarRecebimentoNotificacaoUseCase.Result result = service.executar(

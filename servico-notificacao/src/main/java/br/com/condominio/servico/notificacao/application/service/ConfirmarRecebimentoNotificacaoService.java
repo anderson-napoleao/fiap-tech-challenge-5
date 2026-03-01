@@ -34,15 +34,11 @@ public class ConfirmarRecebimentoNotificacaoService implements ConfirmarRecebime
     Notificacao notificacao = notificacaoRepositoryPort.buscarPorId(command.notificacaoId())
         .orElseThrow(() -> new NotificacaoNaoEncontradaException("Notificacao nao encontrada"));
 
-    boolean autorizado = notificacaoRepositoryPort.existePorEncomendaEMorador(
-        notificacao.encomendaId(),
-        command.moradorId()
-    );
-    if (!autorizado) {
-      throw new AcessoNegadoException("Morador autenticado nao pertence a esta encomenda");
+    if (!notificacao.moradorId().equals(command.moradorId())) {
+      throw new AcessoNegadoException("Notificacao nao pertence ao morador autenticado");
     }
 
-    notificacao.confirmarRecebimento(notificacao.moradorId(), clock.instant());
+    notificacao.confirmarRecebimento(command.moradorId(), clock.instant());
     Notificacao atualizada = notificacaoRepositoryPort.salvar(notificacao);
 
     return new Result(

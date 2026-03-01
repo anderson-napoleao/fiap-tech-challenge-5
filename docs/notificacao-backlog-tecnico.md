@@ -76,7 +76,8 @@ Implementar no `servico-notificacao` o fluxo de notificacao de chegada de encome
 - Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/application/port/in/ConfirmarRecebimentoNotificacaoUseCase.java`, `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/application/service/ConfirmarRecebimentoNotificacaoService.java`
 - Criterios de aceite:
   - `Command` valida `notificacaoId` e `moradorId`;
-  - confirmacao valida ownership da notificacao;
+  - confirmacao valida ownership da notificacao (`jwt.sub == notificacao.moradorId`);
+  - autorizacao e decidida pela propria notificacao, sem regra por `encomendaId`;
   - operacao e idempotente para notificacao ja confirmada.
 
 ## Fase 3 - Persistencia e Outbox
@@ -146,6 +147,7 @@ Implementar no `servico-notificacao` o fluxo de notificacao de chegada de encome
 - Evidencia: `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/adapter/in/web/MoradorNotificacaoController.java`, `servico-notificacao/src/main/java/br/com/condominio/servico/notificacao/application/port/in/ConfirmarRecebimentoNotificacaoUseCase.java`
 - Criterios de aceite:
   - endpoint confirma apenas notificacao do morador autenticado;
+  - autorizacao usa `id` da notificacao e `moradorId` do token (ownership por notificacao);
   - tentativa de confirmar notificacao de outro morador retorna `403` ou `404`;
   - confirmacao repetida e idempotente.
 

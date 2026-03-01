@@ -14,8 +14,6 @@ public interface SpringDataNotificacaoRepository extends JpaRepository<Notificac
 
   Optional<NotificacaoEntity> findBySourceEventIdAndMoradorId(String sourceEventId, String moradorId);
 
-  boolean existsByEncomendaIdAndMoradorId(String encomendaId, String moradorId);
-
   Page<NotificacaoEntity> findByMoradorIdAndStatusNot(
       String moradorId,
       StatusNotificacao status,
