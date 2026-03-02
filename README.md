@@ -292,19 +292,7 @@ curl http://localhost:8085/connectors/notificacao-outbox-connector/status
 mvn test
 ```
 
-### 7.2 Testes com Testcontainers
-
-```bash
-mvn test -Dtestcontainers.enabled=true
-```
-
-PowerShell (Windows):
-
-```powershell
-mvn test "-Dtestcontainers.enabled=true"
-```
-
-### 7.3 Cross-module (integração de sistema)
+### 7.2 Cross-module (integração de sistema)
 
 ```bash
 mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoCadastroUsuarioCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
@@ -326,16 +314,18 @@ PowerShell (Windows):
 mvn -pl tests-integracao-sistema -am test "-Dtestcontainers.enabled=true" "-Dtest=FluxoEncomendaNotificacaoRetiradaCrossModuleTest" "-Dsurefire.failIfNoSpecifiedTests=false"
 ```
 
-### 7.4 Quality gate
-
-```bash
-mvn -Pquality verify
-```
+### 7.3 Quality gate
 
 Execução mais rápida (sem varredura OWASP):
 
 ```bash
 mvn -Pquality -DskipTests -Ddependency-check.skip=true verify
+```
+
+PowerShell (Windows):
+
+```powershell
+mvn -Pquality '-DskipTests=true' '-Ddependency-check.skip=true' verify
 ```
 
 ## 8. Roteiro de Demonstração Funcional (Frontend)
