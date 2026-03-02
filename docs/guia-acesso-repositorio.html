@@ -1,0 +1,66 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Guia de Acesso ao Repositório</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; margin: 36px; line-height: 1.45; color: #1f2937; }
+    h1 { font-size: 24px; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin-top: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    code { background: #f3f4f6; padding: 1px 4px; border-radius: 4px; }
+    pre { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; white-space: pre-wrap; }
+    ul { margin-top: 6px; }
+    li { margin: 5px 0; }
+    .small { font-size: 12px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <h1>Guia de Acesso ao Repositório</h1>
+  <p class="small">Documento de apoio para navegação da documentação e execução do projeto.</p>
+
+  <h2>1. Link do Repositório</h2>
+  <p>Repositório Git:</p>
+  <p><a href="https://github.com/anderson-napoleao/fiap-tech-challenge-5.git">https://github.com/anderson-napoleao/fiap-tech-challenge-5.git</a></p>
+
+  <h2>2. Onde estão as documentações</h2>
+  <ul>
+    <li><code>README.md</code>: visão geral da solução, arquitetura, endpoints, execução local, testes, observabilidade e roteiro de demonstração.</li>
+    <li><code>DOCKER.md</code>: operação do ambiente com Docker Compose, serviços, troubleshooting e validações de CDC.</li>
+    <li><code>tests-integracao-sistema/README.md</code>: estratégia e execução dos testes cross-module (integração entre serviços).</li>
+    <li><code>docs/openapi/</code>: especificações OpenAPI/Swagger de cada serviço (<code>servico-identidade</code>, <code>servico-usuario</code>, <code>servico-encomenda</code>, <code>servico-notificacao</code>).</li>
+    <li><code>infra/debezium/</code>: configuração dos conectores CDC do padrão Outbox (Debezium/Kafka Connect).</li>
+  </ul>
+
+  <h2>3. Onde estão os comandos para executar</h2>
+  <p>Os comandos principais estão no <code>README.md</code> (seções 6 e 7) e no <code>DOCKER.md</code>. Resumo:</p>
+
+  <p><strong>Subir ambiente com Docker</strong></p>
+  <pre>docker compose up -d --build
+docker compose ps</pre>
+
+  <p><strong>Validar conectores CDC</strong></p>
+  <pre>curl http://localhost:8085/connectors
+curl http://localhost:8085/connectors/encomenda-outbox-connector/status
+curl http://localhost:8085/connectors/notificacao-outbox-connector/status</pre>
+
+  <p><strong>Testes padrão</strong></p>
+  <pre>mvn test</pre>
+
+  <p><strong>Testes de integração cross-module</strong></p>
+  <pre>mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoCadastroUsuarioCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false
+mvn -pl tests-integracao-sistema -am test -Dtestcontainers.enabled=true -Dtest=FluxoEncomendaNotificacaoRetiradaCrossModuleTest -Dsurefire.failIfNoSpecifiedTests=false</pre>
+
+  <p><strong>Quality gate (PowerShell)</strong></p>
+  <pre>mvn -Pquality '-DskipTests=true' '-Ddependency-check.skip=true' verify</pre>
+
+  <h2>4. Endereços úteis em execução local</h2>
+  <ul>
+    <li>Frontend: <code>http://localhost:3000</code></li>
+    <li>Swagger Identidade: <code>http://localhost:8081/swagger-ui/index.html</code></li>
+    <li>Swagger Usuário: <code>http://localhost:8082/swagger-ui/index.html</code></li>
+    <li>Swagger Encomenda: <code>http://localhost:8083/swagger-ui/index.html</code></li>
+    <li>Swagger Notificação: <code>http://localhost:8084/swagger-ui/index.html</code></li>
+    <li>Portal de documentação: <code>http://localhost:8090</code></li>
+  </ul>
+</body>
+</html>
